@@ -1,0 +1,19 @@
+.react-datepicker2 {
+  font-family: Tahoma, sans-serif;
+  direction: rtl;
+}
+
+.react-datepicker2 table {
+  border-collapse: collapse;
+}
+
+.react-datepicker2 th, .react-datepicker2 td {
+  text-align: center;
+  padding: 4px;
+}
+
+.react-datepicker2 .day.selected {
+  background-color: #0078d4;
+  color: white;
+  border-radius: 50%;
+}

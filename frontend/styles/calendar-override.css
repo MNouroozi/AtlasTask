@@ -1,0 +1,31 @@
+/*
+ * نسخه ساده و پایدار برای AtlasTask
+ * - بدون z-index تهاجمی
+ * - بدون position: fixed یا transform: none
+ * - فقط هماهنگ‌سازی فونت و راست‌چین بودن
+ */
+
+.DatePicker,
+.DatePicker__input,
+.DatePicker__calendarContainer {
+  font-family: Tahoma !important;
+  direction: rtl !important;
+}
+
+/* ورودی تقویم */
+.DatePicker__input {
+  text-align: center !important;
+  border-radius: 6px;
+}
+
+/* روزهای تقویم */
+.DatePicker__day {
+  font-family: Tahoma !important;
+}
+
+/* پاپ‌آپ تقویم در راست‌چین */
+.DatePicker__calendarContainer {
+  right: auto !important;
+  left: auto !important;
+  /* ❌ حذف z-index و overflow که باعث عقب افتادگی تاریخ می‌شد */
+}
