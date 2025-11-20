@@ -1,5 +1,5 @@
 "use client";
-
+import 'react-toastify/dist/ReactToastify.css';
 import { Box, Typography, Card, CardContent, Grid } from "@mui/material";
 import {
     Task as TaskIcon,
