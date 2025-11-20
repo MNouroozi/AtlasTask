@@ -830,6 +830,11 @@
   resolved "https://registry.yarnpkg.com/@types/estree/-/estree-1.0.8.tgz#958b91c991b1867ced318bedea0e215ee050726e"
   integrity sha512-dWHzHa2WqEXI/O1E9OjrocMTKJl2mSrEolh1Iomrv6U+JuNwaHXsXx9bLu5gG7BUWFIN0skIQJQ/L1rIex4X6w==
 
+"@types/jalaali-js@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@types/jalaali-js/-/jalaali-js-1.2.0.tgz#03533f9387320d4d7283646d1621b11fe82b3834"
+  integrity sha512-DRQKjbfFe0/v3siCou9eFzYjDxJItkJpxbU+/CSptvoRqq2/VmTA6y8QvqK/VELKW6xX3qb174nLZlrFV9OT3Q==
+
 "@types/json-schema@^7.0.15":
   version "7.0.15"
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
@@ -2383,6 +2388,11 @@ iterator.prototype@^1.1.4:
     get-proto "^1.0.0"
     has-symbols "^1.1.0"
     set-function-name "^2.0.2"
+
+jalaali-js@^1.2.8:
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/jalaali-js/-/jalaali-js-1.2.8.tgz#dfc80398a0c4b4182f3eb883363b3b621e7a3878"
+  integrity sha512-Jl/EwY84JwjW2wsWqeU4pNd22VNQ7EkjI36bDuLw31wH98WQW4fPjD0+mG7cdCK+Y8D6s9R3zLiQ3LaKu6bD8A==
 
 jalali-plugin-dayjs@^1.1.4:
   version "1.1.4"
