@@ -1,20 +1,13 @@
-"use client";
+'use client';
 
-import {
-    Card,
-    CardContent,
-    Typography,
-    Box,
-    Chip,
-    IconButton,
-} from "@mui/material";
+import { Card, CardContent, Typography, Box, Chip, IconButton } from '@mui/material';
 import {
     Edit as EditIcon,
     Delete as DeleteIcon,
     Subtitles as SubtasksIcon,
-} from "@mui/icons-material";
-import StatusBadge from "../ui/StatusBadge";
-import { Task } from "@/types";
+} from '@mui/icons-material';
+import StatusBadge from '../ui/StatusBadge';
+import { Task } from '@/app/types';
 
 interface TaskCardProps {
     task: Task;
@@ -23,34 +16,22 @@ interface TaskCardProps {
     onViewSubtasks: (taskId: string) => void;
 }
 
-export default function TaskCard({
-    task,
-    onEdit,
-    onDelete,
-    onViewSubtasks,
-}: TaskCardProps) {
+export default ({task, onEdit, onDelete, onViewSubtasks}: TaskCardProps) => {
     const priorityColors = {
-        low: "success",
-        medium: "warning",
-        high: "error",
+        low: 'success',
+        medium: 'warning',
+        high: 'error',
     } as const;
 
     return (
         <Card sx={{ mb: 2 }}>
             <CardContent sx={{ p: 2 }}>
-                <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "flex-start",
-                        mb: 2,
-                    }}
-                >
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Typography variant="h6" sx={{ fontWeight: 600, flex: 1 }}>
                         {task.title}
                     </Typography>
 
-                    <Box sx={{ display: "flex", gap: 0.5 }}>
+                    <Box sx={{ display: 'flex', gap: 0.5 }}>
                         <IconButton
                             size="small"
                             onClick={() => onEdit(task)}
@@ -83,25 +64,12 @@ export default function TaskCard({
                     {task.description}
                 </Typography>
 
-                <Box
-                    sx={{
-                        display: "flex",
-                        flexWrap: "wrap",
-                        gap: 1,
-                        alignItems: "center",
-                    }}
-                >
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, alignItems: 'center' }}>
                     <StatusBadge status={task.status} />
 
                     <Chip
-                        label={
-                            task.priority === "high"
-                                ? "بالا"
-                                : task.priority === "medium"
-                                  ? "متوسط"
-                                  : "پایین"
-                        }
-                        color={priorityColors[task.priority]}
+                        label={task.priority === 'high' ? 'بالا' : task.priority === 'medium' ? 'متوسط' : 'پایین'}
+                        color={priorityColors[task.priority as keyof typeof priorityColors]}
                         size="small"
                         variant="outlined"
                     />
@@ -112,28 +80,20 @@ export default function TaskCard({
 
                     {task.dueDate && (
                         <Typography variant="caption" color="text.secondary">
-                            مهلت:{" "}
-                            {new Date(task.dueDate).toLocaleDateString("fa-IR")}
+                            مهلت: {new Date(task.dueDate).toLocaleDateString('fa-IR')}
                         </Typography>
                     )}
                 </Box>
 
                 {task.tags.length > 0 && (
-                    <Box
-                        sx={{
-                            display: "flex",
-                            flexWrap: "wrap",
-                            gap: 0.5,
-                            mt: 1,
-                        }}
-                    >
-                        {task.tags.map((tag, index) => (
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5, mt: 1 }}>
+                        {task.tags.map((tag: string, index: number) => (
                             <Chip
                                 key={index}
                                 label={tag}
                                 size="small"
                                 variant="filled"
-                                sx={{ backgroundColor: "grey.100" }}
+                                sx={{ backgroundColor: 'grey.100' }}
                             />
                         ))}
                     </Box>

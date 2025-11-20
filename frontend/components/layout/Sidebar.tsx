@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
     Drawer,
@@ -10,14 +10,15 @@ import {
     Box,
     Typography,
     Divider,
-} from "@mui/material";
+} from '@mui/material';
 import {
     Dashboard as DashboardIcon,
     Task as TaskIcon,
     PlaylistAddCheck as SubtaskIcon,
     Settings as SettingsIcon,
     Folder as FolderIcon,
-} from "@mui/icons-material";
+} from '@mui/icons-material';
+import { useRouter } from 'next/navigation';
 
 interface SidebarProps {
     open: boolean;
@@ -25,16 +26,17 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ open, onToggle }: SidebarProps) {
+    const router = useRouter();
+
     const menuItems = [
-        { text: "داشبورد", icon: <DashboardIcon />, path: "/" },
-        { text: "مدیریت تسک‌ها", icon: <TaskIcon />, path: "/tasks" },
-        { text: "ساب تسک‌ها", icon: <SubtaskIcon />, path: "/subtasks" },
-        { text: "دسته‌بندی‌ها", icon: <FolderIcon />, path: "/categories" },
+        { text: 'داشبورد', icon: <DashboardIcon />, path: '/' },
+        { text: 'مدیریت تسک‌ها', icon: <TaskIcon />, path: '/tasks' },
+        { text: 'ساب تسک‌ها', icon: <SubtaskIcon />, path: '/subtasks' },
     ];
 
-    const bottomMenuItems = [
-        { text: "تنظیمات", icon: <SettingsIcon />, path: "/settings" },
-    ];
+    const handleNavigation = (path: string) => {
+        router.push(path);
+    };
 
     return (
         <Drawer
@@ -44,20 +46,16 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
             sx={{
                 width: 280,
                 flexShrink: 0,
-                "& .MuiDrawer-paper": {
+                '& .MuiDrawer-paper': {
                     width: 280,
-                    boxSizing: "border-box",
-                    borderLeft: "1px solid #e0e0e0",
-                    backgroundColor: "#fafafa",
+                    boxSizing: 'border-box',
+                    borderLeft: '1px solid #e0e0e0',
+                    backgroundColor: '#fafafa',
                 },
             }}
         >
-            <Box sx={{ p: 2, borderBottom: "1px solid #e0e0e0" }}>
-                <Typography
-                    variant="h6"
-                    color="primary"
-                    sx={{ fontWeight: 600 }}
-                >
+            <Box sx={{ p: 2, borderBottom: '1px solid #e0e0e0' }}>
+                <Typography variant="h6" color="primary" sx={{ fontWeight: 600 }}>
                     AtlasTask
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
@@ -69,58 +67,28 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                 {menuItems.map((item) => (
                     <ListItem key={item.text} disablePadding>
                         <ListItemButton
+                            onClick={() => handleNavigation(item.path)}
                             sx={{
                                 minHeight: 48,
                                 px: 2.5,
                                 borderRadius: 1,
                                 mx: 1,
                                 mb: 0.5,
-                                "&:hover": {
-                                    backgroundColor: "primary.light",
-                                    color: "white",
-                                    "& .MuiListItemIcon-root": {
-                                        color: "white",
+                                '&:hover': {
+                                    backgroundColor: 'primary.light',
+                                    color: 'white',
+                                    '& .MuiListItemIcon-root': {
+                                        color: 'white',
                                     },
                                 },
                             }}
                         >
-                            <ListItemIcon
-                                sx={{ minWidth: 40, color: "primary.main" }}
-                            >
+                            <ListItemIcon sx={{ minWidth: 40, color: 'primary.main' }}>
                                 {item.icon}
                             </ListItemIcon>
                             <ListItemText
                                 primary={item.text}
-                                primaryTypographyProps={{
-                                    fontSize: "0.9rem",
-                                    fontWeight: 500,
-                                }}
-                            />
-                        </ListItemButton>
-                    </ListItem>
-                ))}
-            </List>
-
-            <Divider />
-
-            <List>
-                {bottomMenuItems.map((item) => (
-                    <ListItem key={item.text} disablePadding>
-                        <ListItemButton
-                            sx={{
-                                minHeight: 48,
-                                px: 2.5,
-                                borderRadius: 1,
-                                mx: 1,
-                                mt: 0.5,
-                            }}
-                        >
-                            <ListItemIcon sx={{ minWidth: 40 }}>
-                                {item.icon}
-                            </ListItemIcon>
-                            <ListItemText
-                                primary={item.text}
-                                primaryTypographyProps={{ fontSize: "0.9rem" }}
+                                primaryTypographyProps={{ fontSize: '0.9rem', fontWeight: 500 }}
                             />
                         </ListItemButton>
                     </ListItem>

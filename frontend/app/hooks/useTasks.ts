@@ -1,16 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Task, TaskFilters } from "@/types";
+import { MainTask } from "@/app/types";
+
+export interface TaskFilters {
+    search: string;
+    done: string;
+}
 
 export function useTasks() {
-    const [tasks, setTasks] = useState<Task[]>([]);
+    const [tasks, setTasks] = useState<MainTask[]>([]);
     const [loading, setLoading] = useState(true);
     const [filters, setFilters] = useState<TaskFilters>({
         search: "",
-        status: "",
-        priority: "",
-        assignee: "",
+        done: "",
     });
 
     useEffect(() => {
@@ -20,9 +23,12 @@ export function useTasks() {
     const fetchTasks = async () => {
         try {
             setLoading(true);
-            const response = await fetch(
-                "http://localhost:8080/api/main-tasks",
-            );
+            const response = await fetch("http://localhost:8080/api/main-tasks");
+            
+            if (!response.ok) {
+                throw new Error(`خطا در دریافت داده‌ها: ${response.status}`);
+            }
+            
             const data = await response.json();
             setTasks(data);
         } catch (error) {
@@ -32,20 +38,19 @@ export function useTasks() {
         }
     };
 
-    const createTask = async (taskData: Partial<Task>) => {
+    const createTask = async (taskData: Partial<MainTask>) => {
         try {
-            const response = await fetch(
-                "http://localhost:8080/api/main-tasks",
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(taskData),
+            const response = await fetch("http://localhost:8080/api/main-tasks", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-            );
+                body: JSON.stringify(taskData),
+            });
 
-            if (!response.ok) throw new Error("خطا در ایجاد تسک");
+            if (!response.ok) {
+                throw new Error(`خطا در ایجاد تسک: ${response.status}`);
+            }
 
             const newTask = await response.json();
             setTasks((prev) => [newTask, ...prev]);
@@ -56,20 +61,19 @@ export function useTasks() {
         }
     };
 
-    const updateTask = async (id: string, updates: Partial<Task>) => {
+    const updateTask = async (id: number, updates: Partial<MainTask>) => {
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/main-tasks/${id}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(updates),
+            const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
                 },
-            );
+                body: JSON.stringify(updates),
+            });
 
-            if (!response.ok) throw new Error("خطا در ویرایش تسک");
+            if (!response.ok) {
+                throw new Error(`خطا در ویرایش تسک: ${response.status}`);
+            }
 
             const updatedTask = await response.json();
             setTasks((prev) =>
@@ -82,16 +86,15 @@ export function useTasks() {
         }
     };
 
-    const deleteTask = async (id: string) => {
+    const deleteTask = async (id: number) => {
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/main-tasks/${id}`,
-                {
-                    method: "DELETE",
-                },
-            );
+            const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
+                method: "DELETE",
+            });
 
-            if (!response.ok) throw new Error("خطا در حذف تسک");
+            if (!response.ok) {
+                throw new Error(`خطا در حذف تسک: ${response.status}`);
+            }
 
             setTasks((prev) => prev.filter((task) => task.id !== id));
         } catch (error) {
@@ -100,33 +103,53 @@ export function useTasks() {
         }
     };
 
+    const toggleTaskDone = async (id: number, done: boolean) => {
+        try {
+            const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ done }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`خطا در تغییر وضعیت تسک: ${response.status}`);
+            }
+
+            const updatedTask = await response.json();
+            setTasks((prev) =>
+                prev.map((task) => (task.id === id ? updatedTask : task)),
+            );
+            return updatedTask;
+        } catch (error) {
+            console.error("Error toggling task:", error);
+            throw error;
+        }
+    };
+
     const filteredTasks = tasks.filter((task) => {
-        const matchesSearch =
-            !filters.search ||
+        const matchesSearch = !filters.search ||
             task.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-            task.description
-                .toLowerCase()
-                .includes(filters.search.toLowerCase());
+            (task.description && task.description.toLowerCase().includes(filters.search.toLowerCase()));
 
-        const matchesStatus = !filters.status || task.status === filters.status;
-        const matchesPriority =
-            !filters.priority || task.priority === filters.priority;
-        const matchesAssignee =
-            !filters.assignee || task.assignee.includes(filters.assignee);
+        const matchesDone = filters.done === "" || 
+            (filters.done === "done" && task.done) ||
+            (filters.done === "pending" && !task.done);
 
-        return (
-            matchesSearch && matchesStatus && matchesPriority && matchesAssignee
-        );
+        return matchesSearch && matchesDone;
     });
 
     return {
         tasks: filteredTasks,
+        allTasks: tasks,
         loading,
         filters,
         setFilters,
         createTask,
         updateTask,
         deleteTask,
+        toggleTaskDone,
         refetch: fetchTasks,
     };
 }

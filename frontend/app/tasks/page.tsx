@@ -1,205 +1,145 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import TaskModal from "@/components/TaskModal";
-import { convertToJalali } from "@/utils/dateConverter";
-import styles from "./TasksPage.module.css";
-
-interface Task {
-    id: number;
-    title: string;
-    description: string;
-    letter_number: string | null;
-    letter_date: string | null;
-    due_date: string | null;
-    created_at?: string;
-}
+import { useState } from 'react';
+import {
+    Box,
+    Typography,
+    Button,
+    Card,
+    CardContent,
+} from '@mui/material';
+import {
+    Add as AddIcon,
+} from '@mui/icons-material';
+import { useTasks } from '@/app/hooks/useTasks';
+import TaskTable from '@/components/tasks/TaskTable';
+import TaskFilters from '@/components/tasks/TaskFilters';
+import TaskModal from '@/components/tasks/TaskModal';
+import LoadingSpinner from '@/components/ui/LoadingSpinner';
+import { MainTask } from '@/app/types';
 
 export default function TasksPage() {
-    const [tasks, setTasks] = useState<Task[]>([]);
-    const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+    const {
+        tasks,
+        loading,
+        filters,
+        setFilters,
+        createTask,
+        updateTask,
+        deleteTask,
+        toggleTaskDone,
+    } = useTasks();
+
     const [modalOpen, setModalOpen] = useState(false);
-    const [loading, setLoading] = useState(true);
+    const [selectedTask, setSelectedTask] = useState<MainTask | undefined>();
+    const [saveLoading, setSaveLoading] = useState(false);
 
-    useEffect(() => {
-        fetchTasks();
-    }, []);
-
-    const fetchTasks = async () => {
+    const handleCreateTask = async (taskData: Partial<MainTask>) => {
+        setSaveLoading(true);
         try {
-            setLoading(true);
-            const res = await fetch("http://localhost:8080/api/main-tasks");
-            const data = await res.json();
-            setTasks(data);
-        } catch (err) {
-            console.error("خطا در واکشی وظایف:", err);
+            await createTask(taskData);
         } finally {
-            setLoading(false);
+            setSaveLoading(false);
         }
     };
 
-    const handleSave = (savedTask: Task) => {
-        setTasks((prev) => {
-            const idx = prev.findIndex((t) => t.id === savedTask.id);
-            if (idx === -1) return [savedTask, ...prev];
-            const cloned = [...prev];
-            cloned[idx] = savedTask;
-            return cloned;
-        });
-    };
-
-    const handleDelete = async (id: number) => {
-        if (!confirm("آیا از حذف این وظیفه مطمئن هستید؟")) return;
+    const handleUpdateTask = async (taskData: Partial<MainTask>) => {
+        if (!selectedTask) return;
+        
+        setSaveLoading(true);
         try {
-            await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
-                method: "DELETE",
-            });
-            setTasks((prev) => prev.filter((t) => t.id !== id));
-        } catch (err) {
-            console.error("خطا در حذف:", err);
+            await updateTask(selectedTask.id, taskData);
+        } finally {
+            setSaveLoading(false);
         }
     };
 
-    if (loading) {
-        return <div className={styles.loading}>در حال بارگذاری...</div>;
-    }
+    const handleEditTask = (task: MainTask) => {
+        setSelectedTask(task);
+        setModalOpen(true);
+    };
+
+    const handleDeleteTask = async (taskId: number) => {
+        if (window.confirm('آیا از حذف این تسک اطمینان دارید؟')) {
+            try {
+                await deleteTask(taskId);
+            } catch (error) {
+                alert('خطا در حذف تسک');
+            }
+        }
+    };
+
+    const handleViewSubtasks = (taskId: number) => {
+        console.log('View subtasks for task:', taskId);
+        // Navigate to subtasks page
+    };
+
+    const handleToggleDone = async (taskId: number, done: boolean) => {
+        try {
+            await toggleTaskDone(taskId, done);
+        } catch (error) {
+            alert('خطا در تغییر وضعیت تسک');
+        }
+    };
+
+    const handleCloseModal = () => {
+        setModalOpen(false);
+        setSelectedTask(undefined);
+    };
+
+    const handleSaveTask = (taskData: Partial<MainTask>) => {
+        if (selectedTask) {
+            return handleUpdateTask(taskData);
+        } else {
+            return handleCreateTask(taskData);
+        }
+    };
 
     return (
-        <div className={styles.container}>
-            <h2 className={styles.title}>مدیریت وظایف</h2>
+        <Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h4" sx={{ fontWeight: 600 }}>
+                    مدیریت تسک‌ها
+                </Typography>
+                
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => setModalOpen(true)}
+                    sx={{ borderRadius: 2 }}
+                >
+                    ایجاد تسک جدید
+                </Button>
+            </Box>
 
-            <button
-                className={styles.addButton}
-                onClick={() => {
-                    setSelectedTask(null);
-                    setModalOpen(true);
-                }}
-            >
-                ➕ تعریف وظیفه جدید
-            </button>
+            <TaskFilters
+                filters={filters}
+                onFiltersChange={setFilters}
+            />
 
-            <div className={styles.tableContainer}>
-                <table className={styles.table}>
-                    <thead>
-                        <tr>
-                            <th
-                                className={styles.headerCell}
-                                style={{ width: "22%" }}
-                            >
-                                عملیات
-                            </th>
-                            <th
-                                className={styles.headerCell}
-                                style={{ width: "18%" }}
-                            >
-                                عنوان
-                            </th>
-                            <th
-                                className={styles.headerCell}
-                                style={{ width: "12%" }}
-                            >
-                                شماره نامه
-                            </th>
-                            <th
-                                className={styles.headerCell}
-                                style={{ width: "14%" }}
-                            >
-                                تاریخ نامه
-                            </th>
-                            <th
-                                className={styles.headerCell}
-                                style={{ width: "14%" }}
-                            >
-                                تاریخ مهلت
-                            </th>
-                            <th
-                                className={styles.headerCell}
-                                style={{ width: "20%" }}
-                            >
-                                توضیحات
-                            </th>
-                        </tr>
-                    </thead>
+            <Card>
+                <CardContent sx={{ p: '0 !important' }}>
+                    {loading ? (
+                        <LoadingSpinner />
+                    ) : (
+                        <TaskTable
+                            tasks={tasks}
+                            onEdit={handleEditTask}
+                            onDelete={handleDeleteTask}
+                            onViewSubtasks={handleViewSubtasks}
+                            onToggleDone={handleToggleDone}
+                        />
+                    )}
+                </CardContent>
+            </Card>
 
-                    <tbody>
-                        {tasks.length === 0 ? (
-                            <tr>
-                                <td colSpan={6} className={styles.noData}>
-                                    ⚠️ هیچ وظیفه‌ای یافت نشد.
-                                </td>
-                            </tr>
-                        ) : (
-                            tasks.map((task) => (
-                                <tr key={task.id} className={styles.tableRow}>
-                                    <td className={styles.bodyCell}>
-                                        <div className={styles.actions}>
-                                            <button
-                                                className={`${styles.actionButton} ${styles.editButton}`}
-                                                onClick={() => {
-                                                    setSelectedTask(task);
-                                                    setModalOpen(true);
-                                                }}
-                                            >
-                                                ✏️ ویرایش
-                                            </button>
-
-                                            <button
-                                                className={`${styles.actionButton} ${styles.subtaskButton}`}
-                                                onClick={() =>
-                                                    console.log(
-                                                        "🧩 زیرکارها",
-                                                        task.id,
-                                                    )
-                                                }
-                                            >
-                                                🧩 زیرکارها
-                                            </button>
-
-                                            <button
-                                                className={`${styles.actionButton} ${styles.deleteButton}`}
-                                                onClick={() =>
-                                                    handleDelete(task.id)
-                                                }
-                                            >
-                                                🗑 حذف
-                                            </button>
-                                        </div>
-                                    </td>
-
-                                    <td className={styles.bodyCell}>
-                                        {task.title}
-                                    </td>
-                                    <td className={styles.bodyCell}>
-                                        {task.letter_number ?? "—"}
-                                    </td>
-                                    <td className={styles.bodyCell}>
-                                        {task.letter_date
-                                            ? convertToJalali(task.letter_date)
-                                            : "—"}
-                                    </td>
-                                    <td className={styles.bodyCell}>
-                                        {task.due_date
-                                            ? convertToJalali(task.due_date)
-                                            : "—"}
-                                    </td>
-                                    <td className={styles.bodyCell}>
-                                        {task.description}
-                                    </td>
-                                </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
-            </div>
-
-            {modalOpen && (
-                <TaskModal
-                    open={modalOpen}
-                    onClose={() => setModalOpen(false)}
-                    editTask={selectedTask}
-                    onSaved={handleSave}
-                />
-            )}
-        </div>
+            <TaskModal
+                open={modalOpen}
+                onClose={handleCloseModal}
+                task={selectedTask}
+                onSave={handleSaveTask}
+                loading={saveLoading}
+            />
+        </Box>
     );
 }

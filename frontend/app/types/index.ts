@@ -1,29 +1,27 @@
-export interface Task {
-    id: string;
-    title: string;
-    description: string;
-    status: "pending" | "in-progress" | "completed" | "cancelled";
-    priority: "low" | "medium" | "high";
-    dueDate: string;
-    letterNumber?: string;
-    letterDate?: string;
-    assignee: string;
-    tags: string[];
-    subTasks: SubTask[];
-    createdAt: string;
-    updatedAt: string;
+export interface MainTask {
+  id: number;
+  title: string;
+  description: string;
+  done: boolean;
+  letter_number: string;
+  letter_date: string | null;
+  due_date: string | null;
+  subtasks: SubTask[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface SubTask {
-    id: string;
-    title: string;
-    completed: boolean;
-    dueDate?: string;
+  id: number;
+  main_task_id: number;
+  title: string;
+  description: string;
+  completed: boolean;
+  due_date: string | null;
+  created_at: string;
 }
 
 export interface TaskFilters {
-    search: string;
-    status: string;
-    priority: string;
-    assignee: string;
+  search: string;
+  status: string;
 }
