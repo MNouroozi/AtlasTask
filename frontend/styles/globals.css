@@ -1,0 +1,13 @@
+/* styles/globals.css */
+@font-face {
+  font-family: 'Vazir';
+  src: url('/fonts/Vazir.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+html, body, #__next { height: 100% }
+html { direction: rtl }
+body { margin: 0; font-family: Vazir, IRANSans, Segoe UI, Arial, sans-serif; background: #F7F8FA; color: #222 }
+* { box-sizing: border
