@@ -22,6 +22,12 @@ import {
   Subtitles as SubtasksIcon,
   CheckCircle as DoneIcon,
   RadioButtonUnchecked as UndoneIcon,
+  Title as TitleIcon,
+  Numbers as NumbersIcon,
+  DateRange as DateIcon,
+  Description as DescriptionIcon,
+  Flag as FlagIcon,
+  Settings as ActionsIcon,
 } from '@mui/icons-material';
 import { convertToJalali } from '@/lib/dateConverter';
 import { MainTask } from '@/app/types';
@@ -35,7 +41,18 @@ interface TaskTableProps {
 }
 
 type Order = 'asc' | 'desc';
-type OrderBy = keyof MainTask;
+type OrderBy = keyof MainTask | 'status';
+type HeaderId = 'title' | 'letter_number' | 'letter_date' | 'due_date' | 'description' | 'status' | 'actions';
+
+const headerIcons: Record<HeaderId, React.ReactNode> = {
+  title: <TitleIcon fontSize="small" />,
+  letter_number: <NumbersIcon fontSize="small" />,
+  letter_date: <DateIcon fontSize="small" />,
+  due_date: <DateIcon fontSize="small" />,
+  description: <DescriptionIcon fontSize="small" />,
+  status: <FlagIcon fontSize="small" />,
+  actions: <ActionsIcon fontSize="small" />,
+};
 
 export default function TaskTable({ 
   tasks, 
@@ -55,8 +72,8 @@ export default function TaskTable({
 
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => {
-      let aValue: any = a[orderBy];
-      let bValue: any = b[orderBy];
+      let aValue: any = a[orderBy === 'status' ? 'done' : orderBy];
+      let bValue: any = b[orderBy === 'status' ? 'done' : orderBy];
 
       if (orderBy === 'created_at' || orderBy === 'updated_at' || orderBy === 'due_date' || orderBy === 'letter_date') {
         aValue = aValue ? new Date(aValue).getTime() : 0;
@@ -76,13 +93,13 @@ export default function TaskTable({
     });
   }, [tasks, order, orderBy]);
 
-  const headers: { id: OrderBy | 'actions'; label: string; width: string; sortable?: boolean }[] = [
+  const headers: { id: HeaderId; label: string; width: string; sortable?: boolean }[] = [
     { id: 'title', label: 'عنوان تسک', width: '20%', sortable: true },
-    { id: 'letter_number', label: 'شماره نامه', width: '12%', sortable: true },
-    { id: 'letter_date', label: 'تاریخ نامه', width: '12%', sortable: true },
-    { id: 'due_date', label: 'تاریخ مهلت', width: '12%', sortable: true },
+    { id: 'letter_number', label: 'ش . نامه', width: '20%', sortable: true },
+    { id: 'letter_date', label: 'ت . نامه', width: '20%', sortable: true },
+    { id: 'due_date', label: 'ت . مهلت', width: '20%', sortable: true },
     { id: 'description', label: 'توضیحات', width: '20%', sortable: true },
-    { id: 'done', label: 'وضعیت', width: '10%', sortable: true },
+    { id: 'status', label: 'وضعیت', width: '20%', sortable: true },
     { id: 'actions', label: 'عملیات', width: '14%', sortable: false },
   ];
 
@@ -103,28 +120,43 @@ export default function TaskTable({
         <TableHead>
           <TableRow>
             {headers.map((header) => (
-              <TableCell
-                key={String(header.id)}
-                align="center"
-                sx={{ 
-                  width: header.width,
-                  fontWeight: 600,
-                  backgroundColor: 'grey.50',
-                  fontSize: '0.875rem',
-                }}
-              >
-                {header.sortable && header.id !== 'actions' ? (
-                  <TableSortLabel
-                    active={orderBy === header.id}
-                    direction={orderBy === header.id ? order : 'asc'}
-                    onClick={() => handleRequestSort(header.id as OrderBy)}
-                  >
-                    {header.label}
-                  </TableSortLabel>
-                ) : (
-                  header.label
-                )}
-              </TableCell>
+<TableCell
+  key={String(header.id)}
+  align="center"
+  sx={{ 
+    width: header.width,
+    fontWeight: 600,
+    backgroundColor: 'grey.50',
+    fontSize: '0.875rem',
+    py: 1,
+    borderBottom: '2px solid',
+    borderColor: 'primary.main',
+  }}
+>
+  {header.sortable && header.id !== 'actions' ? (
+    <TableSortLabel
+      active={orderBy === header.id}
+      direction={orderBy === header.id ? order : 'asc'}
+      onClick={() => handleRequestSort(header.id as OrderBy)}
+      sx={{
+        '&:hover': {
+          color: 'primary.main',
+        },
+      }}
+      component="div" // این خط رو اضافه کن
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+        {header.label}
+        {headerIcons[header.id]}
+      </Box>
+    </TableSortLabel>
+  ) : (
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+      {header.label}
+      {headerIcons[header.id]}
+    </Box>
+  )}
+</TableCell>
             ))}
           </TableRow>
         </TableHead>
@@ -152,18 +184,9 @@ export default function TaskTable({
               >
                 {/* عنوان تسک */}
                 <TableCell align="center" sx={{ fontWeight: 500 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
-                    <IconButton 
-                      size="small" 
-                      onClick={() => handleToggleDone(task)}
-                      color={task.done ? "success" : "default"}
-                    >
-                      {task.done ? <DoneIcon /> : <UndoneIcon />}
-                    </IconButton>
-                    <Typography variant="body2">
-                      {task.title}
-                    </Typography>
-                  </Box>
+                  <Typography variant="body2">
+                    {task.title}
+                  </Typography>
                 </TableCell>
                 
                 {/* شماره نامه */}
@@ -240,6 +263,17 @@ export default function TaskTable({
                 {/* عملیات */}
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
+                    {/* وضعیت تسک با آیکون */}
+                    <Tooltip title={task.done ? 'انجام شده - کلیک برای تغییر به در انتظار' : 'در انتظار - کلیک برای تغییر به انجام شده'}>
+                      <IconButton 
+                        size="small" 
+                        onClick={() => handleToggleDone(task)}
+                        color={task.done ? "success" : "default"}
+                      >
+                        {task.done ? <DoneIcon fontSize="small" /> : <UndoneIcon fontSize="small" />}
+                      </IconButton>
+                    </Tooltip>
+                    
                     <Tooltip title="ویرایش">
                       <IconButton 
                         size="small" 
