@@ -9,16 +9,16 @@ import {
     ListItemText,
     Box,
     Typography,
-    IconButton,
-    Badge,
-    Tooltip,
+    Avatar,
+    Chip,
 } from '@mui/material';
 import {
     Dashboard as DashboardIcon,
     Task as TaskIcon,
     PlaylistAddCheck as SubtaskIcon,
-    ChevronRight as ChevronRightIcon,
-    ChevronLeft as ChevronLeftIcon,
+    TrendingUp as TrendingIcon,
+    Flag as FlagIcon,
+    Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 
@@ -32,9 +32,24 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
     const pathname = usePathname();
 
     const menuItems = [
-        { text: 'داشبورد', icon: <DashboardIcon />, path: '/', badge: null },
-        { text: 'مدیریت تسک‌ها', icon: <TaskIcon />, path: '/tasks', badge: 5 },
-        { text: 'ساب تسک‌ها', icon: <SubtaskIcon />, path: '/subtasks', badge: 12 },
+        { 
+            text: 'داشبورد', 
+            icon: <DashboardIcon sx={{ fontSize: '1.3rem' }} />, 
+            path: '/', 
+            badge: null,
+        },
+        { 
+            text: 'تسک‌ها', 
+            icon: <TaskIcon sx={{ fontSize: '1.3rem' }} />, 
+            path: '/tasks', 
+            badge: 5,
+        },
+        { 
+            text: 'زیرتسک‌ها', 
+            icon: <SubtaskIcon sx={{ fontSize: '1.3rem' }} />, 
+            path: '/subtasks', 
+            badge: 12,
+        },
     ];
 
     const handleNavigation = (path: string) => {
@@ -49,71 +64,68 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                 anchor="right"
                 open={open}
                 sx={{
-                    width: open ? 280 : 0,
+                    width: open ? 200 : 0,
                     flexShrink: 0,
                     '& .MuiDrawer-paper': {
-                        width: 280,
+                        width: 200,
                         boxSizing: 'border-box',
                         borderLeft: 'none',
-                        backgroundColor: 'white',
-                        boxShadow: '4px 0 20px rgba(0,0,0,0.08)',
+                        backgroundColor: '#ffffff',
+                        background: 'linear-gradient(180deg, #ffffff 0%, #fafbfc 100%)',
+                        color: '#2d3748',
                         position: 'fixed',
                         height: '100vh',
-                        right: open ? 0 : -280,
+                        right: open ? 0 : -240,
                         top: 0,
                         transition: 'right 0.3s ease-in-out',
                         zIndex: 1200,
+                        overflowX: 'hidden',
+                        borderRight: '1px solid #e2e8f0',
                     },
                 }}
             >
+                {/* هدر سایدبار */}
                 <Box sx={{ 
-                    p: 3, 
-                    borderBottom: '1px solid',
-                    borderColor: 'divider',
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
+                    p: 0.5, 
+                    textAlign: 'center',
+                    borderBottom: '1px solid #e2e8f0',
+                    backgroundColor: '#ffffff',
                 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                        <Box>
-                            <Typography variant="h5" sx={{ fontWeight: 800, mb: 0.5 }}>
-                                AtlasTask
-                            </Typography>
-                            <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                                سیستم مدیریت هوشمند
-                            </Typography>
-                        </Box>
-                        <IconButton 
-                            onClick={onToggle}
-                            size="small"
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 2, gap: 2 }}>
+                        <Avatar
                             sx={{
-                                color: 'white',
-                                backgroundColor: 'rgba(255,255,255,0.2)',
-                                '&:hover': {
-                                    backgroundColor: 'rgba(255,255,255,0.3)',
-                                }
+                                width: 44,
+                                height: 44,
+                                backgroundColor: '#3b82f6',
+                                border: '2px solid #dbeafe',
                             }}
                         >
-                            <ChevronRightIcon />
-                        </IconButton>
+                            <TrendingIcon sx={{ fontSize: '1.5rem' }} />
+                        </Avatar>
+                        <Box sx={{ textAlign: 'right' }}>
+                            <Typography variant="h6" sx={{ 
+                                fontWeight: 800, 
+                                color: '#1e40af',
+                                fontSize: '1.25rem',
+                                lineHeight: 1.2,
+                                mb: 0.5
+                            }}>
+                                AtlasTask
+                            </Typography>
+                            <Typography variant="body2" sx={{ 
+                                color: '#6b7280',
+                                fontSize: '0.8rem',
+                                fontWeight: 500
+                            }}>
+                                سیستم مدیریت
+                            </Typography>
+                        </Box>
                     </Box>
                 </Box>
 
+                {/* منوی اصلی */}
                 <Box sx={{ p: 2, flex: 1 }}>
-                    <Typography 
-                        variant="caption" 
-                        sx={{ 
-                            px: 2, 
-                            color: 'text.secondary',
-                            fontWeight: 600,
-                            letterSpacing: '0.5px',
-                            display: 'block',
-                            mb: 1
-                        }}
-                    >
-                        منوی اصلی
-                    </Typography>
-                    
-                    <List sx={{ pt: 1 }}>
+                    <List sx={{ pt: 0, gap: 0.5 }}>
                         {menuItems.map((item) => (
                             <ListItem key={item.text} disablePadding sx={{ mb: 0.5 }}>
                                 <ListItemButton
@@ -121,30 +133,31 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                     selected={pathname === item.path}
                                     sx={{
                                         minHeight: 52,
-                                        px: 2,
-                                        borderRadius: 2,
+                                        px: 2.5,
+                                        py: 1.5,
+                                        borderRadius: 2.0,
+                                        gap: 1, // فاصله بین آیکون و متن
                                         '&.Mui-selected': {
-                                            backgroundColor: 'primary.main',
+                                            backgroundColor: '#3b82f6',
                                             color: 'white',
-                                            boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
                                             '&:hover': {
-                                                backgroundColor: 'primary.dark',
+                                                backgroundColor: '#2563eb',
                                             },
                                             '& .MuiListItemIcon-root': {
                                                 color: 'white',
                                             },
                                         },
                                         '&:hover': {
-                                            backgroundColor: 'primary.50',
+                                            backgroundColor: '#f8fafc',
                                             transition: 'all 0.2s ease',
                                         },
                                     }}
                                 >
                                     <ListItemIcon 
                                         sx={{ 
-                                            minWidth: 40,
-                                            color: pathname === item.path ? 'white' : 'primary.main',
-                                            mr: 2, // تغییر از margin-left به margin-right برای RTL
+                                            minWidth: 'auto', // حذف minWidth ثابت
+                                            color: pathname === item.path ? 'white' : '#6b7280',
+                                            margin: 0, // حذف تمام marginها
                                         }}
                                     >
                                         {item.icon}
@@ -152,19 +165,29 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                     <ListItemText
                                         primary={item.text}
                                         primaryTypographyProps={{ 
-                                            fontSize: '0.9rem', 
-                                            fontWeight: pathname === item.path ? 700 : 600 
+                                            fontSize: '0.95rem', 
+                                            fontWeight: pathname === item.path ? 700 : 600,
+                                            noWrap: true,
+                                        }}
+                                        sx={{
+                                            margin: 0, // حذف margin
+                                            flex: 1,
+                                            textAlign: 'right',
                                         }}
                                     />
                                     {item.badge && (
-                                        <Badge 
-                                            badgeContent={item.badge} 
-                                            color="error"
+                                        <Chip 
+                                            label={item.badge} 
+                                            size="small"
                                             sx={{
-                                                '& .MuiBadge-badge': {
-                                                    fontSize: '0.7rem',
-                                                    height: 18,
-                                                    minWidth: 18,
+                                                backgroundColor: pathname === item.path ? 'white' : '#ef4444',
+                                                color: pathname === item.path ? '#3b82f6' : 'white',
+                                                fontSize: '0.75rem',
+                                                height: 22,
+                                                minWidth: 22,
+                                                fontWeight: 'bold',
+                                                '& .MuiChip-label': {
+                                                    px: 0.5,
                                                 }
                                             }}
                                         />
@@ -173,22 +196,66 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                             </ListItem>
                         ))}
                     </List>
+
+                    {/* بخش آمار */}
+                    <Box sx={{ 
+                        mt: 0, 
+                        p: 1.5, 
+                        backgroundColor: '#f8fafc',
+                        borderRadius: 1.5,
+                        border: '1px solid #e2e8f0',
+                    }}>
+                        <Typography variant="subtitle2" sx={{ 
+                            mb: 2, 
+                            color: '#4b5563', 
+                            textAlign: 'center', 
+                            fontWeight: 700,
+                            fontSize: '0.9rem'
+                        }}>
+                            آمار امروز
+                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center', gap: 1 }}>
+                            <Box sx={{ flex: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
+                                    <FlagIcon sx={{ fontSize: '1.1rem', color: '#10b981', mr: 0.5 }} />
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
+                                        ۸
+                                    </Typography>
+                                </Box>
+                                <Typography variant="caption" sx={{ display: 'block', color: '#6b7280', fontSize: '0.75rem' }}>
+                                    انجام شده
+                                </Typography>
+                            </Box>
+                            <Box sx={{ flex: 1 }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
+                                    <ScheduleIcon sx={{ fontSize: '1.1rem', color: '#f59e0b', mr: 0.5 }} />
+                                    <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
+                                        ۵
+                                    </Typography>
+                                </Box>
+                                <Typography variant="caption" sx={{ display: 'block', color: '#6b7280', fontSize: '0.75rem' }}>
+                                    در انتظار
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
                 </Box>
 
-                <Box sx={{ p: 2, borderTop: '1px solid', borderColor: 'divider' }}>
-                    <Box sx={{ 
-                        backgroundColor: 'grey.50', 
-                        borderRadius: 2, 
-                        p: 2,
-                        textAlign: 'center'
+                {/* فوتر */}
+                <Box sx={{ 
+                    p: 2.5, 
+                    borderTop: '1px solid #e2e8f0',
+                    textAlign: 'center',
+                    backgroundColor: '#f8fafc',
+                }}>
+                    <Typography variant="caption" sx={{ 
+                        color: '#9ca3af', 
+                        display: 'block', 
+                        fontSize: '0.75rem',
+                        fontWeight: 500
                     }}>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                            نسخه ۱.۰.۰
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            توسعه داده شده با ❤️
-                        </Typography>
-                    </Box>
+                        نسخه ۱.۰.۰
+                    </Typography>
                 </Box>
             </Drawer>
 
@@ -198,14 +265,13 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                 anchor="right"
                 open={!open}
                 sx={{
-                    width: !open ? 80 : 0,
+                    width: !open ? 70 : 0,
                     flexShrink: 0,
                     '& .MuiDrawer-paper': {
-                        width: 80,
+                        width: 70,
                         boxSizing: 'border-box',
                         borderLeft: 'none',
-                        backgroundColor: 'white',
-                        boxShadow: '4px 0 20px rgba(0,0,0,0.08)',
+                        backgroundColor: '#ffffff',
                         position: 'fixed',
                         height: '100vh',
                         right: 0,
@@ -215,75 +281,94 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
-                        pt: 2,
+                        pt: 3,
                         overflowX: 'hidden',
+                        borderRight: '1px solid #e2e8f0',
                     },
                 }}
             >
-                <Tooltip title="باز کردن منو" placement="left">
-                    <IconButton 
-                        onClick={onToggle}
-                        sx={{
-                            mb: 3,
-                            color: 'primary.main',
-                            backgroundColor: 'primary.50',
-                            '&:hover': {
-                                backgroundColor: 'primary.100',
-                            }
-                        }}
-                    >
-                        <ChevronLeftIcon />
-                    </IconButton>
-                </Tooltip>
+                {/* آواتار کوچک */}
+                <Avatar
+                    sx={{
+                        width: 40,
+                        height: 40,
+                        marginBottom: 3,
+                        backgroundColor: '#3b82f6',
+                        cursor: 'pointer',
+                        border: '2px solid #dbeafe',
+                    }}
+                    onClick={onToggle}
+                >
+                    <TrendingIcon sx={{ fontSize: '1.3rem' }} />
+                </Avatar>
 
-                <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1 }}>
+                {/* منوی آیتم‌ها */}
+                <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: 1 }}>
                     {menuItems.map((item) => (
-                        <Tooltip key={item.text} title={item.text} placement="left">
-                            <IconButton
-                                onClick={() => handleNavigation(item.path)}
-                                sx={{
-                                    mb: 2,
-                                    color: pathname === item.path ? 'white' : 'primary.main',
-                                    backgroundColor: pathname === item.path ? 'primary.main' : 'transparent',
-                                    width: 48,
-                                    height: 48,
-                                    '&:hover': {
-                                        backgroundColor: pathname === item.path ? 'primary.dark' : 'primary.50',
-                                    },
-                                }}
-                            >
-                                {item.badge ? (
-                                    <Badge 
-                                        badgeContent={item.badge} 
-                                        color="error"
-                                        sx={{
-                                            '& .MuiBadge-badge': {
-                                                fontSize: '0.6rem',
-                                                height: 16,
-                                                minWidth: 16,
-                                                top: 4,
-                                                right: 4,
-                                            }
-                                        }}
-                                    >
-                                        {item.icon}
-                                    </Badge>
-                                ) : (
-                                    item.icon
-                                )}
-                            </IconButton>
-                        </Tooltip>
+                        <Box
+                            key={item.text}
+                            onClick={() => handleNavigation(item.path)}
+                            sx={{
+                                position: 'relative',
+                                cursor: 'pointer',
+                                width: 44,
+                                height: 44,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                borderRadius: 1,
+                                backgroundColor: pathname === item.path ? '#3b82f6' : 'transparent',
+                                color: pathname === item.path ? 'white' : '#6b7280',
+                                transition: 'all 0.2s ease',
+                                '&:hover': {
+                                    backgroundColor: pathname === item.path ? '#2563eb' : '#f3f4f6',
+                                },
+                            }}
+                        >
+                            {item.badge && (
+                                <Box
+                                    sx={{
+                                        position: 'absolute',
+                                        top: -4,
+                                        left: -4,
+                                        backgroundColor: '#ef4444',
+                                        color: 'white',
+                                        borderRadius: '50%',
+                                        width: 16,
+                                        height: 16,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.6rem',
+                                        fontWeight: 'bold',
+                                    }}
+                                >
+                                    {item.badge}
+                                </Box>
+                            )}
+                            {item.icon}
+                        </Box>
                     ))}
                 </Box>
 
                 {/* ورژن در حالت کوچک */}
-                <Box sx={{ mt: 'auto', mb: 2, textAlign: 'center' }}>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem' }}>
+                <Box sx={{ mt: 'auto', mb: 2 }}>
+                    <Typography 
+                        variant="caption" 
+                        sx={{ 
+                            color: '#9ca3af', 
+                            fontSize: '0.6rem',
+                            writingMode: 'vertical-rl',
+                            textOrientation: 'mixed',
+                            fontWeight: 500
+                        }}
+                    >
                         v1.0.0
                     </Typography>
                 </Box>
             </Drawer>
 
+            {/* overlay برای موبایل */}
             {open && (
                 <Box
                     sx={{
@@ -292,7 +377,7 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
                         zIndex: 1199,
                         display: { xs: 'block', md: 'none' },
                     }}
