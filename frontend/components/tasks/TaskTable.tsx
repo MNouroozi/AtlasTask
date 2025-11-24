@@ -27,7 +27,7 @@ import {
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { convertToJalali } from '@/lib/dateConverter';
-import { MainTask } from '@/app/types';
+import { MainTask, SubTask } from '@/app/types';
 import SubTasksPanel from '@/components/subTasks/SubTasksPanel';
 
 interface TaskTableProps {
@@ -36,6 +36,7 @@ interface TaskTableProps {
   onDelete: (taskId: number) => void;
   onToggleDone: (taskId: number, done: boolean) => void;
   onAddSubTask: (taskId: number) => void;
+  onEditSubTask: (subTask: SubTask) => void;
   onDeleteSubTask: (subTaskId: number) => void;
   onToggleSubTaskDone: (subTaskId: number, done: boolean) => void;
 }
@@ -59,6 +60,7 @@ export default function TaskTable({
   onDelete, 
   onToggleDone,
   onAddSubTask,
+  onEditSubTask,
   onDeleteSubTask,
   onToggleSubTaskDone,
 }: TaskTableProps) {
@@ -324,6 +326,7 @@ export default function TaskTable({
                       isOpen={isTaskExpanded(task.id)}
                       onToggle={() => handleToggleExpand(task.id)}
                       onAddSubTask={onAddSubTask}
+                      onEditSubTask={onEditSubTask}
                       onDeleteSubTask={onDeleteSubTask}
                       onToggleSubTaskDone={onToggleSubTaskDone}
                     />

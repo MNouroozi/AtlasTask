@@ -17,7 +17,7 @@ import TaskFilters from '@/components/tasks/TaskFilters';
 import TaskModal from '@/components/tasks/TaskModal';
 import SubTaskModal from '@/components/subTasks/SubTaskModal';
 import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { MainTask, CreateSubTaskData } from '@/app/types';
+import { MainTask, CreateSubTaskData, SubTask } from '@/app/types';
 
 export default function TasksPage() {
     const {
@@ -37,7 +37,7 @@ export default function TasksPage() {
     const [selectedTask, setSelectedTask] = useState<MainTask | undefined>();
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
-    const [expandedTasks, setExpandedTasks] = useState<number[]>([]);
+    const [editingSubTask, setEditingSubTask] = useState<SubTask | undefined>();
 
     const handleCreateTask = async (taskData: Partial<MainTask>) => {
         setSaveLoading(true);
@@ -103,6 +103,12 @@ export default function TasksPage() {
         setSubTaskModalOpen(true);
     };
 
+    const handleEditSubTask = (subTask: SubTask) => {
+    setEditingSubTask(subTask);
+    setSelectedTaskId(subTask.main_task_id); // برای باز کردن مودال
+    setSubTaskModalOpen(true);
+    };
+
     const handleCreateSubTask = async (subTaskData: CreateSubTaskData) => {
         if (!selectedTaskId) return;
         
@@ -125,11 +131,6 @@ export default function TasksPage() {
             await response.json();
             setSubTaskModalOpen(false);
             setSelectedTaskId(null);
-            
-            if (!expandedTasks.includes(selectedTaskId)) {
-                setExpandedTasks(prev => [...prev, selectedTaskId]);
-            }
-            
             refetchTasks();
         } catch (error) {
             console.error('Error creating subtask:', error);
@@ -178,18 +179,6 @@ export default function TasksPage() {
         }
     };
 
-    const handleToggleExpand = (taskId: number) => {
-        setExpandedTasks(prev => 
-            prev.includes(taskId) 
-                ? prev.filter(id => id !== taskId)
-                : [...prev, taskId]
-        );
-    };
-
-    const isTaskExpanded = (taskId: number) => {
-        return expandedTasks.includes(taskId);
-    };
-
     return (
         <Box>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -223,6 +212,7 @@ export default function TasksPage() {
                             onDelete={handleDeleteTask}
                             onToggleDone={handleToggleDone}
                             onAddSubTask={handleAddSubTask}
+                            onEditSubTask={handleEditSubTask}
                             onDeleteSubTask={handleDeleteSubTask}
                             onToggleSubTaskDone={handleToggleSubTaskDone}
                         />
