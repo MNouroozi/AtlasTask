@@ -67,7 +67,6 @@ export default function TaskTable({
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<OrderBy>('title');
   const [expandedTask, setExpandedTask] = useState<number | null>(null);
-
   const handleRequestSort = (property: OrderBy) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');

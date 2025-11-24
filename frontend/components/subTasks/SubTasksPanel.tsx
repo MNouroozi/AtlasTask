@@ -56,9 +56,10 @@ export default function SubTasksPanel({
 }: SubTasksPanelProps) {
   const [confirmDialog, setConfirmDialog] = useState<number | null>(null);
 
-  const hasSubTasks = subTasks && subTasks.length > 0;
-  const completedCount = subTasks.filter(st => st.done).length;
-  const totalCount = subTasks.length;
+  const safeSubTasks = subTasks || [];
+  const hasSubTasks = safeSubTasks.length > 0;
+  const completedCount = safeSubTasks.filter(st => st.done).length;
+  const totalCount = safeSubTasks.length;
 
   const handleDelete = () => {
     if (confirmDialog) {
@@ -69,7 +70,6 @@ export default function SubTasksPanel({
 
   return (
     <>
-      {/* هدر پنل زیرکارها */}
       <Box
         sx={{
           display: 'flex',
@@ -79,15 +79,18 @@ export default function SubTasksPanel({
           backgroundColor: 'grey.50',
           borderTop: '1px solid',
           borderColor: 'divider',
-          cursor: 'pointer',
-          '&:hover': {
-            backgroundColor: 'action.hover',
-          },
         }}
-        onClick={onToggle}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-          <IconButton size="small" color="primary">
+          <IconButton
+            size="small"
+            color="primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              onToggle();
+            }}
+            aria-label={isOpen ? 'بستن زیرکارها' : 'باز کردن زیرکارها'}
+          >
             {isOpen ? <CollapseIcon /> : <ExpandIcon />}
           </IconButton>
           <SubtaskIcon color="primary" sx={{ fontSize: 20 }} />
@@ -119,7 +122,6 @@ export default function SubTasksPanel({
         </Button>
       </Box>
 
-      {/* محتوای پنل زیرکارها */}
       <Collapse in={isOpen} timeout="auto">
         <Box sx={{ p: 2, backgroundColor: 'grey.50' }}>
           {!hasSubTasks ? (
@@ -131,9 +133,9 @@ export default function SubTasksPanel({
             </Box>
           ) : (
             <Grid container spacing={2}>
-              {subTasks.map((subTask) => (
+              {safeSubTasks.map((subTask) => (
                 <Grid item xs={12} sm={6} md={4} lg={3} key={subTask.id}>
-                  <Card 
+                  <Card
                     variant="outlined"
                     sx={{
                       height: '100%',
@@ -148,11 +150,10 @@ export default function SubTasksPanel({
                     }}
                   >
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
-                      {/* هدر کارت - عنوان با آیکون */}
-                      <Box sx={{ 
-                        display: 'flex', 
-                        alignItems: 'flex-start', 
-                        gap: 1, 
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 1,
                         mb: 2,
                         p: 1.5,
                         borderRadius: 1,
@@ -160,8 +161,8 @@ export default function SubTasksPanel({
                         borderColor: 'divider',
                         backgroundColor: 'grey.50'
                       }}>
-                        <TaskIcon 
-                          fontSize="small" 
+                        <TaskIcon
+                          fontSize="small"
                           color={subTask.done ? "success" : "primary"}
                           sx={{ mt: 0.2 }}
                         />
@@ -179,7 +180,6 @@ export default function SubTasksPanel({
                         </Typography>
                       </Box>
 
-                      {/* تاریخ‌ها */}
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                           <TimeIcon fontSize="small" color="action" />
@@ -195,28 +195,29 @@ export default function SubTasksPanel({
                         </Box>
                       </Box>
 
-                      {/* وضعیت و دکمه‌ها */}
-                      <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
+                      <Box sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
                         borderTop: '1px solid',
                         borderColor: 'divider',
                         pt: 1.5
                       }}>
-                        {/* وضعیت */}
-                        <Tooltip title={subTask.done ? 'انجام شده - کلیک برای تغییر' : 'در حال انجام - کلیک برای تغییر'}>
+                        <Tooltip title={subTask.done ? 'انجام شده - کلیک برای تغییر' : 'در حال انجام - کلیک برای تغییر'} disableInteractive>
                           <Chip
-                            icon={subTask.done ? 
-                              <DoneIcon fontSize="small" /> : 
+                            icon={subTask.done ?
+                              <DoneIcon fontSize="small" /> :
                               <UndoneIcon fontSize="small" />
                             }
                             label={subTask.done ? 'انجام شده' : 'در حال انجام'}
                             size="small"
                             color={subTask.done ? "success" : "warning"}
                             variant={subTask.done ? "filled" : "outlined"}
-                            onClick={() => onToggleSubTaskDone(subTask.id, !subTask.done)}
-                            sx={{ 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onToggleSubTaskDone(subTask.id, !subTask.done);
+                            }}
+                            sx={{
                               cursor: 'pointer',
                               fontSize: '0.7rem',
                               height: '24px'
@@ -224,32 +225,36 @@ export default function SubTasksPanel({
                           />
                         </Tooltip>
 
-                        {/* دکمه‌های عملیات */}
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          {onEditSubTask && (
-                            <Tooltip title="ویرایش زیرکار">
-                              <IconButton
-                                size="small"
-                                onClick={() => onEditSubTask(subTask)}
-                                color="primary"
-                                sx={{
-                                  backgroundColor: 'primary.50',
-                                  '&:hover': {
-                                    backgroundColor: 'primary.100',
-                                  },
-                                  width: '32px',
-                                  height: '32px'
-                                }}
-                              >
-                                <EditIcon fontSize="small" />
-                              </IconButton>
-                            </Tooltip>
-                          )}
-                          
-                          <Tooltip title="حذف زیرکار">
+                          <Tooltip title="ویرایش زیرکار" disableInteractive>
                             <IconButton
                               size="small"
-                              onClick={() => setConfirmDialog(subTask.id)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('SubTasksPanel: edit click', { subTaskId: subTask.id, subTask });
+                                onEditSubTask?.({ id: subTask.id } as any);      
+                              }}
+                              color="primary"
+                              sx={{
+                                backgroundColor: 'primary.50',
+                                '&:hover': {
+                                  backgroundColor: 'primary.100',
+                                },
+                                width: '32px',
+                                height: '32px'
+                              }}
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+
+                          <Tooltip title="حذف زیرکار" disableInteractive>
+                            <IconButton
+                              size="small"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmDialog(subTask.id);
+                              }}
                               color="error"
                               sx={{
                                 backgroundColor: 'error.50',
@@ -274,7 +279,6 @@ export default function SubTasksPanel({
         </Box>
       </Collapse>
 
-      {/* دیالوگ تایید حذف */}
       <Dialog open={!!confirmDialog} onClose={() => setConfirmDialog(null)} maxWidth="xs" fullWidth>
         <DialogTitle sx={{ pb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
           <DeleteIcon color="error" />
@@ -289,9 +293,9 @@ export default function SubTasksPanel({
           <Button onClick={() => setConfirmDialog(null)} size="small">
             انصراف
           </Button>
-          <Button 
-            onClick={handleDelete} 
-            variant="contained" 
+          <Button
+            onClick={handleDelete}
+            variant="contained"
             color="error"
             size="small"
             startIcon={<DeleteIcon />}

@@ -64,6 +64,7 @@ export default function SubTaskModal({
     });
 
     useEffect(() => {
+          console.log('SubTaskModal useEffect — open:', open, 'subTask:', subTask);
         if (subTask) {
             setFormData({
                 title: subTask.title || '',
@@ -176,8 +177,6 @@ export default function SubTaskModal({
                 startSubtask: startDate,
                 finishSubtask: finishDate,
             };
-            
-            console.log('Sending subtask data:', subTaskData);
             
             await onSave(subTaskData);
             
