@@ -11,17 +11,30 @@ export interface MainTask {
   updated_at: string;
 }
 
+export interface TaskFilters {
+  search: string;
+  status: string;
+}
+
 export interface SubTask {
   id: number;
   main_task_id: number;
   title: string;
-  description: string;
-  completed: boolean;
-  due_date: string | null;
+  done: boolean;
+  startSubtask: string;
+  finishSubtask: string;
   created_at: string;
+  updated_at: string;
 }
 
-export interface TaskFilters {
+export interface CreateSubTaskData {
+  title: string;
+  done?: boolean;
+  startSubtask: string;
+  finishSubtask: string;
+}
+
+export interface SubTaskFilters {
   search: string;
-  status: string;
+  done: string;
 }

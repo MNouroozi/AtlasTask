@@ -1,10 +1,11 @@
 package handlers
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"strconv"
 	"task/config"
 	"task/models"
+
+	"github.com/gofiber/fiber/v2"
 )
 
 func CreateSubtask(c *fiber.Ctx) error {
@@ -36,7 +37,7 @@ func GetSubtasksByMainTask(c *fiber.Ctx) error {
 	}
 
 	var subtasks []models.Subtask
-	if err := config.DB.Where("main_task_id = ?", uint(mainTaskID)).Find(&subtasks).Order("created_at DESC").Error; err != nil {
+	if err := config.DB.Where("main_task_id = ?", uint(mainTaskID)).Order("created_at DESC").Find(&subtasks).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
@@ -54,7 +55,10 @@ func UpdateSubtask(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
 	}
 
-	config.DB.Save(&subtask)
+	if err := config.DB.Save(&subtask).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	return c.JSON(subtask)
 }
 
@@ -65,6 +69,9 @@ func DeleteSubtask(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Subtask not found"})
 	}
 
-	config.DB.Delete(&subtask)
+	if err := config.DB.Delete(&subtask).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
+
 	return c.JSON(fiber.Map{"message": "Subtask deleted successfully"})
 }

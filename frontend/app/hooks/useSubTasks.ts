@@ -1,29 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-
-export interface SubTask {
-  id: number;
-  main_task_id: number;
-  title: string;
-  done: boolean;
-  startSubtask: string;
-  finishSubtask: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface CreateSubTaskData {
-  title: string;
-  done?: boolean;
-  startSubtask: string;
-  finishSubtask: string;
-}
-
-export interface SubTaskFilters {
-  search: string;
-  done: string;
-}
+import { SubTask, CreateSubTaskData, SubTaskFilters } from "../types";
 
 export function useSubTasks(mainTaskId?: number) {
   const [subTasks, setSubTasks] = useState<SubTask[]>([]);
