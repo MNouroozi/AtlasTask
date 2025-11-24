@@ -3,6 +3,7 @@ package handlers
 import (
 	"task/config"
 	"task/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -46,17 +47,55 @@ func UpdateMainTask(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "MainTask not found"})
 	}
 
-	var input models.MainTask
+	var input map[string]interface{}
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	task.Title = input.Title
-	task.Description = input.Description
-	task.LetterNumber = input.LetterNumber
-	task.LetterDate = input.LetterDate
-	task.DueDate = input.DueDate
-	task.Done = input.Done
+	if title, exists := input["title"]; exists {
+		task.Title = title.(string)
+	}
+	if description, exists := input["description"]; exists {
+		task.Description = description.(string)
+	}
+	if letterNumber, exists := input["letter_number"]; exists {
+		task.LetterNumber = letterNumber.(string)
+	}
+	if letterDate, exists := input["letter_date"]; exists {
+		if letterDate == nil {
+			task.LetterDate = nil
+		} else {
+			dateStr := letterDate.(string)
+			if dateStr != "" {
+				parsedTime, err := time.Parse(time.RFC3339, dateStr)
+				if err != nil {
+					return c.Status(400).JSON(fiber.Map{"error": "Invalid letter_date format"})
+				}
+				task.LetterDate = &parsedTime
+			} else {
+				task.LetterDate = nil
+			}
+		}
+	}
+	if dueDate, exists := input["due_date"]; exists {
+		if dueDate == nil {
+			task.DueDate = nil
+		} else {
+			dateStr := dueDate.(string)
+			if dateStr != "" {
+				parsedTime, err := time.Parse(time.RFC3339, dateStr)
+				if err != nil {
+					return c.Status(400).JSON(fiber.Map{"error": "Invalid due_date format"})
+				}
+				task.DueDate = &parsedTime
+			} else {
+				task.DueDate = nil
+			}
+		}
+	}
+	if done, exists := input["done"]; exists {
+		task.Done = done.(bool)
+	}
 
 	if err := config.DB.Save(&task).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})

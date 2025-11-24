@@ -15,6 +15,7 @@ import {
   Chip,
   Tooltip,
   Typography,
+  IconButton,
 } from '@mui/material';
 import {
   Title as TitleIcon,
@@ -22,11 +23,12 @@ import {
   DateRange as DateIcon,
   Description as DescriptionIcon,
   Flag as FlagIcon,
+  Edit as EditIcon,
+  Delete as DeleteIcon,
 } from '@mui/icons-material';
 import { convertToJalali } from '@/lib/dateConverter';
 import { MainTask } from '@/app/types';
-import TaskRowMenu from './TaskRowMenu';
-import SubTasksPanel from '../subTasks/SubTasksPanel';
+import SubTasksPanel from '@/components/subTasks/SubTasksPanel';
 
 interface TaskTableProps {
   tasks: MainTask[];
@@ -39,16 +41,15 @@ interface TaskTableProps {
 }
 
 type Order = 'asc' | 'desc';
-type OrderBy = keyof MainTask | 'status';
-type HeaderId = 'title' | 'letter_number' | 'letter_date' | 'due_date' | 'description' | 'status' | 'actions';
+type OrderBy = keyof MainTask;
+type HeaderId = 'title' | 'letter_number' | 'letter_date' | 'description' | 'due_date' | 'actions';
 
 const headerIcons: Record<HeaderId, React.ReactNode> = {
   title: <TitleIcon fontSize="small" />,
   letter_number: <NumbersIcon fontSize="small" />,
   letter_date: <DateIcon fontSize="small" />,
-  due_date: <DateIcon fontSize="small" />,
   description: <DescriptionIcon fontSize="small" />,
-  status: <FlagIcon fontSize="small" />,
+  due_date: <DateIcon fontSize="small" />,
   actions: <FlagIcon fontSize="small" />,
 };
 
@@ -75,10 +76,14 @@ export default function TaskTable({
     setExpandedTask(expandedTask === taskId ? null : taskId);
   };
 
+  const isTaskExpanded = (taskId: number) => {
+    return expandedTask === taskId;
+  };
+
   const sortedTasks = useMemo(() => {
     return [...tasks].sort((a, b) => {
-      let aValue: any = a[orderBy === 'status' ? 'done' : orderBy];
-      let bValue: any = b[orderBy === 'status' ? 'done' : orderBy];
+      let aValue: any = a[orderBy];
+      let bValue: any = b[orderBy];
 
       if (orderBy === 'created_at' || orderBy === 'updated_at' || orderBy === 'due_date' || orderBy === 'letter_date') {
         aValue = aValue ? new Date(aValue).getTime() : 0;
@@ -99,13 +104,12 @@ export default function TaskTable({
   }, [tasks, order, orderBy]);
 
   const headers: { id: HeaderId; label: string; width: string; sortable?: boolean }[] = [
-    { id: 'title', label: 'عنوان تسک', width: '20%', sortable: true },
+    { id: 'title', label: 'عنوان تسک', width: '18%', sortable: true },
     { id: 'letter_number', label: 'ش . نامه', width: '12%', sortable: true },
     { id: 'letter_date', label: 'ت . نامه', width: '12%', sortable: true },
+    { id: 'description', label: 'توضیحات', width: '28%', sortable: true },
     { id: 'due_date', label: 'ت . مهلت', width: '12%', sortable: true },
-    { id: 'description', label: 'توضیحات', width: '20%', sortable: true },
-    { id: 'status', label: 'وضعیت', width: '10%', sortable: true },
-    { id: 'actions', label: 'عملیات', width: '14%', sortable: false },
+    { id: 'actions', label: 'عملیات', width: '18%', sortable: false },
   ];
 
   return (
@@ -165,7 +169,7 @@ export default function TaskTable({
         <TableBody>
           {sortedTasks.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+              <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
                 <Typography variant="body2" color="text.secondary">
                   هیچ تسکی یافت نشد
                 </Typography>
@@ -177,10 +181,11 @@ export default function TaskTable({
                 <TableRow 
                   sx={{ 
                     '&:hover': { 
-                      backgroundColor: 'action.hover',
+                      backgroundColor: task.done ? '#e8f5e8' : '#fff3e0',
                     },
-                    backgroundColor: task.done ? 'action.selected' : 'transparent',
+                    backgroundColor: task.done ? '#e8f5e8' : '#fff3e0',
                     cursor: 'pointer',
+                    borderLeft: task.done ? '4px solid #22c55e' : '4px solid #f59e0b',
                   }}
                   onClick={() => handleToggleExpand(task.id)}
                 >
@@ -189,6 +194,15 @@ export default function TaskTable({
                       <Typography variant="body2">
                         {task.title}
                       </Typography>
+                      {task.subtasks && task.subtasks.length > 0 && (
+                        <Chip
+                          label={task.subtasks.length}
+                          size="small"
+                          color="info"
+                          variant="outlined"
+                          sx={{ height: 24, fontSize: '0.7rem' }}
+                        />
+                      )}
                     </Box>
                   </TableCell>
                   
@@ -217,6 +231,25 @@ export default function TaskTable({
                   </TableCell>
                   
                   <TableCell align="center">
+                    <Tooltip title={task.description || 'بدون توضیح'}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          lineHeight: 1.4,
+                          maxHeight: '4.2em',
+                        }}
+                      >
+                        {task.description || '—'}
+                      </Typography>
+                    </Tooltip>
+                  </TableCell>
+                  
+                  <TableCell align="center">
                     {task.due_date ? (
                       <Chip
                         label={convertToJalali(task.due_date)}
@@ -232,50 +265,63 @@ export default function TaskTable({
                   </TableCell>
                   
                   <TableCell align="center">
-                    <Tooltip title={task.description || 'بدون توضیح'}>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          lineHeight: 1.4,
-                        }}
-                      >
-                        {task.description || '—'}
-                      </Typography>
-                    </Tooltip>
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    <Chip
-                      label={task.done ? 'انجام شده' : 'در انتظار'}
-                      size="small"
-                      color={task.done ? "success" : "warning"}
-                      variant={task.done ? "filled" : "outlined"}
-                    />
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    <TaskRowMenu
-                      task={task}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onToggleDone={onToggleDone}
-                      onAddSubTask={onAddSubTask}
-                      onViewSubTasks={handleToggleExpand}
-                    />
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
+                      <Tooltip title={task.done ? 'انجام شده - کلیک برای تغییر به در حال انجام' : 'در حال انجام - کلیک برای تغییر به انجام شده'}>
+                        <Chip
+                          label={task.done ? 'انجام شده' : 'در حال انجام'}
+                          size="small"
+                          color={task.done ? "success" : "warning"}
+                          variant={task.done ? "filled" : "outlined"}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleDone(task.id, !task.done);
+                          }}
+                          sx={{ 
+                            cursor: 'pointer',
+                            '&:hover': {
+                              opacity: 0.8,
+                            }
+                          }}
+                        />
+                      </Tooltip>
+
+                      <Box sx={{ display: 'flex', gap: 0.5 }}>
+                        <Tooltip title="ویرایش">
+                          <IconButton 
+                            size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEdit(task);
+                            }}
+                            color="primary"
+                          >
+                            <EditIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        
+                        <Tooltip title="حذف">
+                          <IconButton 
+                            size="small" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDelete(task.id);
+                            }}
+                            color="error"
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
+                    </Box>
                   </TableCell>
                 </TableRow>
 
                 <TableRow>
-                  <TableCell colSpan={7} sx={{ p: 0, border: 0 }}>
+                  <TableCell colSpan={6} sx={{ p: 0, border: 0 }}>
                     <SubTasksPanel
                       taskId={task.id}
                       subTasks={task.subtasks || []}
-                      isOpen={expandedTask === task.id}
+                      isOpen={isTaskExpanded(task.id)}
                       onToggle={() => handleToggleExpand(task.id)}
                       onAddSubTask={onAddSubTask}
                       onDeleteSubTask={onDeleteSubTask}
