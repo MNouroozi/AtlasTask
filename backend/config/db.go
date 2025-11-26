@@ -22,7 +22,7 @@ func ConnectDB() {
 	// ✳ خواندن رشته اتصال از متغیر محیطی یا فالو‌بک پیش‌فرض
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
-		dsn = "host=localhost user=admin password=Admin123@ dbname=Task port=5432 sslmode=disable TimeZone=Asia/Tehran"
+		dsn = "host=localhost user=admin password=Admin123@ dbname=task port=5432 sslmode=disable TimeZone=Asia/Tehran"
 	}
 
 	// اتصال با GORM
