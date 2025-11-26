@@ -121,3 +121,22 @@ func DeleteMainTask(c *fiber.Ctx) error {
 
 	return c.Status(200).JSON(fiber.Map{"message": "MainTask deleted successfully"})
 }
+
+func GetMainTasksByPending(c *fiber.Ctx) error {
+	var pendingTasks []models.MainTask
+	var count int64
+
+	result := config.DB.Preload("Subtasks").Where("done = ?", false).Find(&pendingTasks).Count(&count)
+
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "خطا در دریافت داده‌ها",
+		})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"pending_tasks_count": count,
+		"pending_tasks":       pendingTasks,
+		"message":             "تسک‌های در انتظار با موفقیت دریافت شدند ✅",
+	})
+}
