@@ -4,12 +4,12 @@ package handlers
 import (
 	"log"
 
-	"github.com/gofiber/fiber/v2"
 	"task/config"
 	"task/models"
+
+	"github.com/gofiber/fiber/v2"
 )
 
-// 🧩 CreateMainTask — افزودن کار اصلی جدید
 func CreateMainTask(c *fiber.Ctx) error {
 	var task models.MainTask
 	if err := c.BodyParser(&task); err != nil {
@@ -24,7 +24,6 @@ func CreateMainTask(c *fiber.Ctx) error {
 	return c.Status(201).JSON(task)
 }
 
-// 🧩 GetMainTasks — واکشی تمام کارهای اصلی همراه با زیروظایف
 func GetMainTasks(c *fiber.Ctx) error {
 	var tasks []models.MainTask
 	if err := config.DB.Preload("Subtasks").Find(&tasks).Error; err != nil {
@@ -35,7 +34,6 @@ func GetMainTasks(c *fiber.Ctx) error {
 	return c.Status(200).JSON(tasks)
 }
 
-// 🧩 GetMainTaskByID — واکشی یک کار خاص با زیروظایف
 func GetMainTaskByID(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -48,7 +46,6 @@ func GetMainTaskByID(c *fiber.Ctx) error {
 	return c.Status(200).JSON(task)
 }
 
-// 🧩 UpdateMainTask — ویرایش کار اصلی + واکشی همراه زیروظایف پس از بروزرسانی
 func UpdateMainTask(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -62,7 +59,6 @@ func UpdateMainTask(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	// 🛠 اعمال تغییرات
 	task.Title = input.Title
 	task.Description = input.Description
 	task.DueDate = input.DueDate
@@ -72,7 +68,6 @@ func UpdateMainTask(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to update MainTask record"})
 	}
 
-	// ✅ واکشی مجدد همراه با Subtasks
 	if err := config.DB.Preload("Subtasks").First(&task, id).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "failed to reload updated MainTask with subtasks"})
 	}
@@ -81,7 +76,6 @@ func UpdateMainTask(c *fiber.Ctx) error {
 	return c.Status(200).JSON(task)
 }
 
-// 🗑️ DeleteMainTask — حذف کار اصلی
 func DeleteMainTask(c *fiber.Ctx) error {
 	id := c.Params("id")
 
@@ -97,5 +91,24 @@ func DeleteMainTask(c *fiber.Ctx) error {
 	log.Printf("🔴 [DELETE] MainTask id=%s deleted successfully\n", id)
 	return c.Status(200).JSON(fiber.Map{
 		"message": "MainTask deleted successfully ✅",
+	})
+}
+
+func GetMainTasksByPending(c *fiber.Ctx) error {
+	var pendingTasks []models.MainTask
+	var count int64
+
+	result := config.DB.Preload("Subtasks").Where("done = ?", false).Find(&pendingTasks).Count(&count)
+
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error": "خطا در دریافت داده‌ها",
+		})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"pending_tasks_count": count,
+		"pending_tasks":       pendingTasks,
+		"message":             "تسک‌های در انتظار با موفقیت دریافت شدند ✅",
 	})
 }

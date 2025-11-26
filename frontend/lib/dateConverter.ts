@@ -1,7 +1,6 @@
 import { toGregorian, toJalaali } from 'jalaali-js';
 import type { Value } from 'react-multi-date-picker';
 
-// تبدیل تاریخ میلادی به شمسی (برای نمایش)
 export const convertToJalali = (gregorianDate: string | null): string => {
     if (!gregorianDate) return '-';
     
@@ -22,14 +21,12 @@ export const convertToJalali = (gregorianDate: string | null): string => {
     }
 };
 
-// تبدیل تاریخ شمسی به میلادی (برای ارسال به بک‌اند) - پشتیبانی از تمام انواع Value
 export const convertToGregorian = (jalaaliDate: Value): string | null => {
     if (!jalaaliDate) return null;
     
     try {
         let jYear: number, jMonth: number, jDay: number;
 
-        // اگر تاریخ از DatePicker به صورت آبجکت آمده
         if (typeof jalaaliDate === 'object' && jalaaliDate !== null && !Array.isArray(jalaaliDate)) {
             const dateObj = jalaaliDate as any;
             if (dateObj.year && dateObj.month && dateObj.day) {
@@ -41,7 +38,6 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
                 return null;
             }
         }
-        // اگر تاریخ به صورت آرایه هست (ممکنه DatePicker آرایه برگردونه)
         else if (Array.isArray(jalaaliDate)) {
             if (jalaaliDate.length === 0) return null;
             const firstDate = jalaaliDate[0];
@@ -54,7 +50,6 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
                 return null;
             }
         }
-        // اگر تاریخ به صورت رشته هست (مثل "1403/08/27")
         else if (typeof jalaaliDate === 'string') {
             const parts = jalaaliDate.split('/');
             
@@ -72,7 +67,6 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
                 return null;
             }
         }
-        // اگر عدد هست (نباید اتفاق بیفته اما برای ایمنی)
         else if (typeof jalaaliDate === 'number') {
             console.error('Date as number is not supported:', jalaaliDate);
             return null;
@@ -82,17 +76,14 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
             return null;
         }
 
-        // تبدیل شمسی به میلادی
         const gregorian = toGregorian(jYear, jMonth, jDay);
         
-        // ایجاد تاریخ میلادی
         const gregorianDate = new Date(
             gregorian.gy,
-            gregorian.gm - 1, // ماه در جاوااسکریپت از 0 شروع میشه
+            gregorian.gm - 1,
             gregorian.gd
         );
 
-        // بررسی معتبر بودن تاریخ
         if (isNaN(gregorianDate.getTime())) {
             console.error('Invalid converted date:', { jYear, jMonth, jDay, gregorian });
             return null;
@@ -105,7 +96,6 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
     }
 };
 
-// فرمت تاریخ برای نمایش در inputهای DatePicker
 export const formatDateForPicker = (gregorianDate: string | null): string => {
     if (!gregorianDate) return '';
     
@@ -126,7 +116,6 @@ export const formatDateForPicker = (gregorianDate: string | null): string => {
     }
 };
 
-// تابع کمکی برای دیباگ - مشاهده ساختار Value
 export const debugDateValue = (value: Value): void => {
     console.log('Date Value Debug:', {
         type: typeof value,

@@ -21,6 +21,7 @@ import {
     Schedule as ScheduleIcon,
 } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
+import { useTasks } from '@/app/hooks/useTasks'; 
 
 interface SidebarProps {
     open: boolean;
@@ -30,6 +31,8 @@ interface SidebarProps {
 export default function Sidebar({ open, onToggle }: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
+    const { pendingCount, allTasks } = useTasks();
+    const completedCount = allTasks.filter(task => task.done).length;
 
     const menuItems = [
         { 
@@ -42,13 +45,13 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
             text: 'تسک‌ها', 
             icon: <TaskIcon sx={{ fontSize: '1.3rem' }} />, 
             path: '/tasks', 
-            badge: 5,
+            badge: allTasks.length,
         },
         { 
             text: 'زیرتسک‌ها', 
             icon: <SubtaskIcon sx={{ fontSize: '1.3rem' }} />, 
             path: '/subtasks', 
-            badge: 12,
+            badge: allTasks.reduce((total, task) => total + (task.subtasks?.length || 0), 0),
         },
     ];
 
@@ -219,7 +222,7 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
                                     <FlagIcon sx={{ fontSize: '1.1rem', color: '#10b981', mr: 0.5 }} />
                                     <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
-                                        ۸
+                                        {completedCount}
                                     </Typography>
                                 </Box>
                                 <Typography variant="caption" sx={{ display: 'block', color: '#6b7280', fontSize: '0.75rem' }}>
@@ -230,7 +233,7 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
                                     <ScheduleIcon sx={{ fontSize: '1.1rem', color: '#f59e0b', mr: 0.5 }} />
                                     <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
-                                        ۵
+                                       {pendingCount}
                                     </Typography>
                                 </Box>
                                 <Typography variant="caption" sx={{ display: 'block', color: '#6b7280', fontSize: '0.75rem' }}>

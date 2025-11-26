@@ -103,9 +103,9 @@ export default function TaskTable({
     { id: 'actions', label: 'عملیات', width: '14%', sortable: false },
   ];
 
-  const handleToggleDone = (task: MainTask) => {
-    onToggleDone(task.id, !task.done);
-  };
+  // const handleToggleDone = (task: MainTask) => {
+  //   onToggleDone(task.id, !task.done);
+  // };
 
   return (
     <TableContainer 
@@ -264,16 +264,16 @@ export default function TaskTable({
                 <TableCell align="center">
                   <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5 }}>
                     {/* وضعیت تسک با آیکون */}
-                    <Tooltip title={task.done ? 'انجام شده - کلیک برای تغییر به در انتظار' : 'در انتظار - کلیک برای تغییر به انجام شده'}>
-                      <IconButton 
-                        size="small" 
-                        onClick={() => handleToggleDone(task)}
-                        color={task.done ? "success" : "default"}
-                      >
-                        {task.done ? <DoneIcon fontSize="small" /> : <UndoneIcon fontSize="small" />}
-                      </IconButton>
-                    </Tooltip>
-                    
+                  <Tooltip title={task.done ? 'انجام شده - کلیک برای تغییر به در انتظار' : 'در انتظار - کلیک برای تغییر به انجام شده'}>
+                    <IconButton 
+                      size="small" 
+                      onClick={() => onToggleDone(task.id, !task.done)}
+                      color={task.done ? "success" : "default"}
+                    >
+                      {task.done ? <DoneIcon fontSize="small" /> : <UndoneIcon fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                                      
                     <Tooltip title="ویرایش">
                       <IconButton 
                         size="small" 

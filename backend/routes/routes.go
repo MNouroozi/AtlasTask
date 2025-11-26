@@ -1,19 +1,15 @@
-// فایل: C:\Users\pc-iran\SpanBox\AtlasTask\backend\routes\routes.go
-// توضیح فارسی: ثبت مسیرهای اصلی REST API مستقیماً با هندلرهای داخلی بدون پوشه controllers
-
 package routes
 
 import (
-	"github.com/gofiber/fiber/v2"
 	"task/config"
 	"task/models"
+
+	"github.com/gofiber/fiber/v2"
 )
 
-// RegisterRoutes ثبت مسیرهای API AtlasTask
 func RegisterRoutes(app *fiber.App) {
 	api := app.Group("/api")
 
-	// 📗 لیست وظایف
 	api.Get("/main-tasks", func(c *fiber.Ctx) error {
 		var tasks []models.MainTask
 		result := config.DB.Preload("Subtasks").Find(&tasks)
@@ -23,7 +19,6 @@ func RegisterRoutes(app *fiber.App) {
 		return c.JSON(tasks)
 	})
 
-	// 🧾 ساخت وظیفه جدید
 	api.Post("/main-tasks", func(c *fiber.Ctx) error {
 		var task models.MainTask
 		if err := c.BodyParser(&task); err != nil {
@@ -35,7 +30,6 @@ func RegisterRoutes(app *fiber.App) {
 		return c.JSON(task)
 	})
 
-	// ✏️ ویرایش وظیفه
 	api.Put("/main-tasks/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		var task models.MainTask
@@ -49,7 +43,6 @@ func RegisterRoutes(app *fiber.App) {
 		return c.JSON(task)
 	})
 
-	// 🗑 حذف وظیفه
 	api.Delete("/main-tasks/:id", func(c *fiber.Ctx) error {
 		id := c.Params("id")
 		if err := config.DB.Delete(&models.MainTask{}, id).Error; err != nil {
@@ -58,7 +51,21 @@ func RegisterRoutes(app *fiber.App) {
 		return c.SendStatus(204)
 	})
 
-	// ✅ زیر‌وظایف (Subtasks)
+	api.Get("/main-tasks/pending", func(c *fiber.Ctx) error {
+		var pendingTasks []models.MainTask
+		var count int64
+
+		if err := config.DB.Where("done = ?", false).Find(&pendingTasks).Count(&count).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+
+		return c.Status(200).JSON(fiber.Map{
+			"pending_count": count,
+			"tasks":         pendingTasks,
+			"message":       "تسک‌های در انتظار دریافت شدند",
+		})
+	})
+
 	api.Get("/subtasks/:task_id", func(c *fiber.Ctx) error {
 		taskID := c.Params("task_id")
 		var subtasks []models.Subtask
