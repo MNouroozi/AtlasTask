@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { MainTask } from "@/app/types";
 
 export interface TaskFilters {
@@ -9,8 +9,11 @@ export interface TaskFilters {
 }
 
 export function useTasks() {
-    const [tasks, setTasks] = useState<MainTask[]>([]);
+    const [allTasks, setAllTasks] = useState<MainTask[]>([]);
+    const [pendingTasks, setPendingTasks] = useState<MainTask[]>([]);
+    const [pendingCount, setPendingCount] = useState<number>(0);
     const [loading, setLoading] = useState(true);
+    const [pendingLoading, setPendingLoading] = useState(false);
     const [filters, setFilters] = useState<TaskFilters>({
         search: "",
         done: "",
@@ -18,6 +21,7 @@ export function useTasks() {
 
     useEffect(() => {
         fetchTasks();
+        fetchPendingTasks();
     }, []);
 
     const fetchTasks = async () => {
@@ -30,16 +34,109 @@ export function useTasks() {
             }
             
             const data = await response.json();
-            setTasks(data);
+            setAllTasks(data);
         } catch (error) {
             console.error("Error fetching tasks:", error);
-
         } finally {
             setLoading(false);
         }
     };
 
-    const createTask = async (taskData: Partial<MainTask>) => {
+    const fetchPendingTasks = async () => {
+        try {
+            setPendingLoading(true);
+            const response = await fetch("http://localhost:8080/api/main-tasks/pending");
+            
+            if (!response.ok) {
+                throw new Error(`خطا در دریافت تسک‌های در انتظار: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            setPendingTasks(data.tasks || []);
+            setPendingCount(data.pending_count || 0);
+        } catch (error) {
+            console.error("Error fetching pending tasks:", error);
+        } finally {
+            setPendingLoading(false);
+        }
+    };
+
+    const updateTask = useCallback(async (id: number, updates: Partial<MainTask>) => {
+        try {
+            console.log("🔄 Updating task:", id, updates);
+            
+            const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(updates),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`خطا در ویرایش تسک: ${response.status} - ${errorText}`);
+            }
+
+            const updatedTask = await response.json();
+            console.log("✅ Updated task received:", updatedTask);
+
+            // آپدیت allTasks
+            setAllTasks(prevTasks => {
+                const newTasks = prevTasks.map(task => 
+                    task.id === id ? updatedTask : task
+                );
+                console.log("📝 New allTasks:", newTasks);
+                return newTasks;
+            });
+
+            // آپدیت pending tasks
+            setPendingTasks(prevPending => {
+                if (updatedTask.done) {
+                    const newPending = prevPending.filter(task => task.id !== id);
+                    console.log("❌ Removed from pending:", newPending);
+                    return newPending;
+                } else {
+                    const existingIndex = prevPending.findIndex(task => task.id === id);
+                    if (existingIndex >= 0) {
+                        const newPending = [...prevPending];
+                        newPending[existingIndex] = updatedTask;
+                        console.log("✏️ Updated in pending:", newPending);
+                        return newPending;
+                    } else {
+                        const newPending = [updatedTask, ...prevPending];
+                        console.log("➕ Added to pending:", newPending);
+                        return newPending;
+                    }
+                }
+            });
+
+            // آپدیت pending count
+            setPendingCount(prevCount => {
+                const currentTask = allTasks.find(task => task.id === id);
+                let newCount = prevCount;
+                
+                if (currentTask && currentTask.done !== updatedTask.done) {
+                    newCount = updatedTask.done ? Math.max(0, prevCount - 1) : prevCount + 1;
+                    console.log("🔢 New pending count:", newCount);
+                }
+                
+                return newCount;
+            });
+
+            return updatedTask;
+        } catch (error) {
+            console.error("❌ Error updating task:", error);
+            throw error;
+        }
+    }, [allTasks]);
+
+    const toggleTaskDone = useCallback(async (id: number, done: boolean) => {
+        console.log("🎯 Toggle task:", id, "to:", done);
+        return updateTask(id, { done });
+    }, [updateTask]);
+
+    const createTask = useCallback(async (taskData: Partial<MainTask>) => {
         try {
             const response = await fetch("http://localhost:8080/api/main-tasks", {
                 method: "POST",
@@ -55,47 +152,26 @@ export function useTasks() {
             }
 
             const newTask = await response.json();
-            setTasks((prev) => [newTask, ...prev]);
-
+            
+            setAllTasks(prev => [newTask, ...prev]);
+            
+            if (!newTask.done) {
+                setPendingTasks(prev => [newTask, ...prev]);
+                setPendingCount(prev => prev + 1);
+            }
             
             return newTask;
         } catch (error) {
             console.error("Error creating task:", error);
-
             throw error;
         }
-    };
+    }, []);
 
-    const updateTask = async (id: number, updates: Partial<MainTask>) => {
+    const deleteTask = useCallback(async (id: number) => {
         try {
-            const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(updates),
-            });
+            const taskToDelete = allTasks.find(task => task.id === id);
+            const wasPending = taskToDelete && !taskToDelete.done;
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`خطا در ویرایش تسک: ${response.status} - ${errorText}`);
-            }
-
-            const updatedTask = await response.json();
-            setTasks((prev) =>
-                prev.map((task) => (task.id === id ? updatedTask : task)),
-            );
-            
-            return updatedTask;
-        } catch (error) {
-            console.error("Error updating task:", error);
-
-            throw error;
-        }
-    };
-
-    const deleteTask = async (id: number) => {
-        try {
             const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
                 method: "DELETE",
             });
@@ -104,42 +180,20 @@ export function useTasks() {
                 throw new Error(`خطا در حذف تسک: ${response.status}`);
             }
 
-            setTasks((prev) => prev.filter((task) => task.id !== id));
-           
+            setAllTasks(prev => prev.filter(task => task.id !== id));
             
+            if (wasPending) {
+                setPendingTasks(prev => prev.filter(task => task.id !== id));
+                setPendingCount(prev => Math.max(0, prev - 1));
+            }
+        
         } catch (error) {
             console.error("Error deleting task:", error);
             throw error;
         }
-    };
+    }, [allTasks]);
 
-    const toggleTaskDone = async (id: number, done: boolean) => {
-        try {
-            const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ done }),
-            });
-
-            if (!response.ok) {
-                throw new Error(`خطا در تغییر وضعیت تسک: ${response.status}`);
-            }
-
-            const updatedTask = await response.json();
-            setTasks((prev) =>
-                prev.map((task) => (task.id === id ? updatedTask : task)),
-            );
-            
-            return updatedTask;
-        } catch (error) {
-            console.error("Error toggling task:", error);
-            throw error;
-        }
-    };
-
-    const filteredTasks = tasks.filter((task) => {
+    const filteredTasks = allTasks.filter((task) => {
         const matchesSearch = !filters.search ||
             task.title.toLowerCase().includes(filters.search.toLowerCase()) ||
             (task.description && task.description.toLowerCase().includes(filters.search.toLowerCase()));
@@ -152,9 +206,12 @@ export function useTasks() {
     });
 
     return {
-        tasks: filteredTasks,
-        allTasks: tasks,
+        tasks: filteredTasks,    // تسک‌های فیلتر شده برای جدول
+        allTasks: allTasks,      // همه تسک‌ها برای سایدبار
+        pendingTasks,
+        pendingCount,
         loading,
+        pendingLoading,
         filters,
         setFilters,
         createTask,
@@ -162,5 +219,6 @@ export function useTasks() {
         deleteTask,
         toggleTaskDone,
         refetch: fetchTasks,
+        refetchPending: fetchPendingTasks,
     };
 }
