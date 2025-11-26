@@ -201,6 +201,7 @@ Thumbs.db
 *.tmp
 *.temp
 *~
+backend/tmp/main
 .vs/slnx.sqlite
 .vs/VSWorkspaceState.json
 .vs/AtlasTask/v18/workspaceFileList.bin

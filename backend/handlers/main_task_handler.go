@@ -1,11 +1,9 @@
-// توضیح فارسی: هندلر اصلی برای عملیات CRUD مدل MainTask در بک‌اند AtlasTask
 package handlers
 
 import (
-	"log"
-
 	"task/config"
 	"task/models"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -13,85 +11,115 @@ import (
 func CreateMainTask(c *fiber.Ctx) error {
 	var task models.MainTask
 	if err := c.BodyParser(&task); err != nil {
-		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid JSON"})
 	}
 
 	if err := config.DB.Create(&task).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to create main task"})
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	log.Println("🟢 [POST] MainTask created:", task.Title)
 	return c.Status(201).JSON(task)
 }
 
 func GetMainTasks(c *fiber.Ctx) error {
 	var tasks []models.MainTask
 	if err := config.DB.Preload("Subtasks").Find(&tasks).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to fetch main tasks"})
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	log.Println("🟡 [GET] MainTasks fetched:", len(tasks))
 	return c.Status(200).JSON(tasks)
 }
 
 func GetMainTaskByID(c *fiber.Ctx) error {
 	id := c.Params("id")
-
 	var task models.MainTask
 	if err := config.DB.Preload("Subtasks").First(&task, id).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "MainTask not found"})
 	}
 
-	log.Println("🟡 [GET] MainTask fetched:", id)
 	return c.Status(200).JSON(task)
 }
 
 func UpdateMainTask(c *fiber.Ctx) error {
 	id := c.Params("id")
-
 	var task models.MainTask
 	if err := config.DB.First(&task, id).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "MainTask not found"})
 	}
 
-	var input models.MainTask
+	var input map[string]interface{}
 	if err := c.BodyParser(&input); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	task.Title = input.Title
-	task.Description = input.Description
-	task.DueDate = input.DueDate
-	task.Done = input.Done
+	if title, exists := input["title"]; exists {
+		task.Title = title.(string)
+	}
+	if description, exists := input["description"]; exists {
+		task.Description = description.(string)
+	}
+	if letterNumber, exists := input["letter_number"]; exists {
+		task.LetterNumber = letterNumber.(string)
+	}
+	if letterDate, exists := input["letter_date"]; exists {
+		if letterDate == nil {
+			task.LetterDate = nil
+		} else {
+			dateStr := letterDate.(string)
+			if dateStr != "" {
+				parsedTime, err := time.Parse(time.RFC3339, dateStr)
+				if err != nil {
+					return c.Status(400).JSON(fiber.Map{"error": "Invalid letter_date format"})
+				}
+				task.LetterDate = &parsedTime
+			} else {
+				task.LetterDate = nil
+			}
+		}
+	}
+	if dueDate, exists := input["due_date"]; exists {
+		if dueDate == nil {
+			task.DueDate = nil
+		} else {
+			dateStr := dueDate.(string)
+			if dateStr != "" {
+				parsedTime, err := time.Parse(time.RFC3339, dateStr)
+				if err != nil {
+					return c.Status(400).JSON(fiber.Map{"error": "Invalid due_date format"})
+				}
+				task.DueDate = &parsedTime
+			} else {
+				task.DueDate = nil
+			}
+		}
+	}
+	if done, exists := input["done"]; exists {
+		task.Done = done.(bool)
+	}
 
 	if err := config.DB.Save(&task).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to update MainTask record"})
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
 	if err := config.DB.Preload("Subtasks").First(&task, id).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to reload updated MainTask with subtasks"})
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to reload task"})
 	}
 
-	log.Printf("✅ [PUT] MainTask id=%s updated successfully\n", id)
 	return c.Status(200).JSON(task)
 }
 
 func DeleteMainTask(c *fiber.Ctx) error {
 	id := c.Params("id")
-
 	var task models.MainTask
 	if err := config.DB.First(&task, id).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "MainTask not found"})
 	}
 
 	if err := config.DB.Delete(&task).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": "failed to delete MainTask"})
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	log.Printf("🔴 [DELETE] MainTask id=%s deleted successfully\n", id)
-	return c.Status(200).JSON(fiber.Map{
-		"message": "MainTask deleted successfully ✅",
-	})
+	return c.Status(200).JSON(fiber.Map{"message": "MainTask deleted successfully"})
 }
 
 func GetMainTasksByPending(c *fiber.Ctx) error {
