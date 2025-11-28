@@ -39,6 +39,7 @@ interface TaskTableProps {
   onEditSubTask: (subTask: SubTask) => void;
   onDeleteSubTask: (subTaskId: number) => void;
   onToggleSubTaskDone: (subTaskId: number, done: boolean) => void;
+  expandedTaskId?: number | null; // اضافه کردن این خط
 }
 
 type Order = 'asc' | 'desc';
