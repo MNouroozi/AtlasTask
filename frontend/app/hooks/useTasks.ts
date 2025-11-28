@@ -1,12 +1,13 @@
 "use client";
 
-
-import { MainTask } from "@/app/types";
+import { MainTask, TaskStatus } from "@/app/types";
 import { useTasksContext } from "@/app/context/TasksContext";
 import { useState, useCallback, useMemo } from "react";
+
 export interface TaskFilters {
     search: string;
     done: string;
+    status: string;
 }
 
 export function useTasks() {
@@ -15,6 +16,7 @@ export function useTasks() {
     const [filters, setFilters] = useState<TaskFilters>({
         search: "",
         done: "",
+        status: "",
     });
 
     // محاسبه pendingCount با useMemo
@@ -159,7 +161,10 @@ export function useTasks() {
                 (filters.done === "done" && task.done) ||
                 (filters.done === "pending" && !task.done);
 
-            return matchesSearch && matchesDone;
+            const matchesStatus = filters.status === "" || 
+                task.status === filters.status;
+
+            return matchesSearch && matchesDone && matchesStatus;
         });
     }, [allTasks, filters]);
 

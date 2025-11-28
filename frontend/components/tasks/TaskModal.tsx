@@ -15,6 +15,7 @@ import {
     Checkbox,
     Chip,
     Paper,
+    MenuItem,
 } from '@mui/material';
 import { 
     Close as CloseIcon, 
@@ -25,12 +26,13 @@ import {
     Edit as EditIcon,
     Save as SaveIcon,
     Add as AddIcon,
+    Flag as FlagIcon,
 } from '@mui/icons-material';
 import DatePicker from 'react-multi-date-picker';
 import type { Value } from 'react-multi-date-picker';
 import persian from 'react-date-object/calendars/persian';
 import persian_fa from 'react-date-object/locales/persian_fa';
-import { MainTask } from '@/app/types';
+import { MainTask, TaskStatus } from '@/app/types';
 import { toast } from 'react-toastify';
 import { convertToGregorian, formatDateForPicker } from '@/lib/dateConverter';
 
@@ -62,15 +64,18 @@ export default function TaskModal({
         description: '',
         letter_number: '',
         done: false,
+        status: TaskStatus.FollowUp,
     });
 
     useEffect(() => {
         if (task) {
+            console.log('📥 Task data loaded:', task);
             setFormData({
                 title: task.title || '',
                 description: task.description || '',
                 letter_number: task.letter_number || '',
                 done: task.done || false,
+                status: task.status || TaskStatus.FollowUp,
             });
             
             setSelectedDueDate(task.due_date ? formatDateForPicker(task.due_date) : null);
@@ -81,13 +86,13 @@ export default function TaskModal({
                 description: '',
                 letter_number: '',
                 done: false,
+                status: TaskStatus.FollowUp,
             });
             setSelectedDueDate(null);
             setSelectedLetterDate(null);
         }
     }, [task, open]);
 
-    
     const modalConfig = task ? {
         headerColor: '#f59e0b',
         headerBackground: `linear-gradient(135deg, #f59e0b08 0%, #f59e0b03 100%)`,
@@ -102,7 +107,6 @@ export default function TaskModal({
         buttonColor: '#3b82f6',
     };
 
-    
     const dynamicStyles = {
         dialogPaper: {
             borderRadius: 3,
@@ -158,6 +162,12 @@ export default function TaskModal({
         setFormData(prev => ({ ...prev, [field]: value }));
     };
 
+    const handleStatusChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newStatus = event.target.value as TaskStatus;
+        console.log('🔄 Status changing to:', newStatus);
+        setFormData(prev => ({ ...prev, status: newStatus }));
+    };
+
     const handleSubmit = async () => {
         if (!formData.title.trim()) {
             toast.error('عنوان تسک الزامی است');
@@ -175,18 +185,20 @@ export default function TaskModal({
                 taskData.id = task.id;
             }
             
-            
-            
+            console.log('📤 ارسال داده‌ها به سرور:', taskData);
+            console.log('📤 وضعیت انتخاب شده:', formData.status);
+
             await onSave(taskData);
             
             toast.success(task ? 'تسک با موفقیت ویرایش شد' : 'تسک جدید ایجاد شد');
             onClose();
         } catch (error) {
-            
+            console.error('❌ Error saving task:', error);
             toast.error('خطا در ذخیره تسک');
         }
     };
 
+    // کامپوننت اصلاح شده برای DatePicker - فقط برای تاریخ
     const CustomDateInput = ({ value, onChange, onFocus, onBlur, placeholder }: any) => (
         <TextField
             fullWidth
@@ -217,7 +229,6 @@ export default function TaskModal({
                 sx: dynamicStyles.dialogPaper,
             }}
         >
-            {}
             <DialogTitle sx={{ 
                 p: 2.5, 
                 pb: 2,
@@ -281,33 +292,62 @@ export default function TaskModal({
 
             <DialogContent sx={{ p: 3, mt: 3.5 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {}
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: textColor }}>
-                            <Box sx={{ 
-                                width: 24, 
-                                height: 24, 
-                                borderRadius: 1,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                ...dynamicStyles.iconBox
-                            }}>
-                                <TitleIcon sx={{ fontSize: 16 }} />
-                            </Box>
-                            عنوان تسک *
-                        </Typography>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            value={formData.title}
-                            onChange={handleInputChange('title')}
-                            placeholder="عنوان تسک را وارد کنید"
-                            sx={dynamicStyles.inputField}
-                        />
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3 }}>
+                        <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: textColor }}>
+                                <Box sx={{ 
+                                    width: 24, 
+                                    height: 24, 
+                                    borderRadius: 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    ...dynamicStyles.iconBox
+                                }}>
+                                    <TitleIcon sx={{ fontSize: 16 }} />
+                                </Box>
+                                عنوان تسک *
+                            </Typography>
+                            <TextField
+                                fullWidth
+                                size="small"
+                                value={formData.title}
+                                onChange={handleInputChange('title')}
+                                placeholder="عنوان تسک را وارد کنید"
+                                sx={dynamicStyles.inputField}
+                            />
+                        </Box>
+
+                        <Box>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: textColor }}>
+                                <Box sx={{ 
+                                    width: 24, 
+                                    height: 24, 
+                                    borderRadius: 1,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    ...dynamicStyles.iconBox
+                                }}>
+                                    <FlagIcon sx={{ fontSize: 16 }} />
+                                </Box>
+                                وضعیت
+                            </Typography>
+                            <TextField
+                                select
+                                fullWidth
+                                size="small"
+                                value={formData.status}
+                                onChange={handleStatusChange}
+                                sx={dynamicStyles.inputField}
+                            >
+                                <MenuItem value={TaskStatus.FollowUp}>پیگیری</MenuItem>
+                                <MenuItem value={TaskStatus.Action}>اقدام</MenuItem>
+                                <MenuItem value={TaskStatus.Reminder}>یادآوری</MenuItem>
+                            </TextField>
+                        </Box>
                     </Box>
 
-                    {}
                     <Box>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: textColor }}>
                             <Box sx={{ 
@@ -335,112 +375,92 @@ export default function TaskModal({
                         />
                     </Box>
 
-                    {}
-                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
-                        {}
-                        <Paper elevation={0} sx={{ 
-                            p: 2.5, 
-                            borderRadius: 2, 
-                            border: `1px solid ${modalConfig.borderColor}`, 
-                            backgroundColor: `${modalConfig.buttonColor}03` 
-                        }}>
-                            <Typography variant="subtitle2" sx={{ ...dynamicStyles.sectionTitle, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <CalendarToday sx={{ fontSize: 18, color: modalConfig.buttonColor }} />
-                                تاریخ‌ها
-                            </Typography>
-                            
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                <Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: textColor, fontSize: '0.85rem' }}>
-                                        تاریخ سررسید
-                                    </Typography>
-                                    <DatePicker
-                                        value={selectedDueDate}
-                                        onChange={setSelectedDueDate}
-                                        calendar={persian}
-                                        locale={persian_fa}
-                                        calendarPosition="bottom-right"
-                                        format="YYYY/MM/DD"
-                                        render={<CustomDateInput placeholder="تاریخ سررسید را انتخاب کنید" />}
-                                    />
-                                </Box>
-
-                                <Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: textColor, fontSize: '0.85rem' }}>
-                                        تاریخ نامه
-                                    </Typography>
-                                    <DatePicker
-                                        value={selectedLetterDate}
-                                        onChange={setSelectedLetterDate}
-                                        calendar={persian}
-                                        locale={persian_fa}
-                                        calendarPosition="bottom-right"
-                                        format="YYYY/MM/DD"
-                                        render={<CustomDateInput placeholder="تاریخ نامه را انتخاب کنید" />}
-                                    />
-                                </Box>
+                    <Paper elevation={0} sx={{ 
+                        p: 2.5, 
+                        borderRadius: 2, 
+                        border: `1px solid ${modalConfig.borderColor}`, 
+                        backgroundColor: `${modalConfig.buttonColor}03` 
+                    }}>
+                        <Typography variant="subtitle2" sx={{ ...dynamicStyles.sectionTitle, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <CalendarToday sx={{ fontSize: 18, color: modalConfig.buttonColor }} />
+                            تاریخ‌ها و اطلاعات
+                        </Typography>
+                        
+                        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr 1fr' }, gap: 3 }}>
+                            <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: textColor, fontSize: '0.85rem' }}>
+                                    تاریخ سررسید
+                                </Typography>
+                                <DatePicker
+                                    value={selectedDueDate}
+                                    onChange={setSelectedDueDate}
+                                    calendar={persian}
+                                    locale={persian_fa}
+                                    calendarPosition="bottom-right"
+                                    format="YYYY/MM/DD"
+                                    render={<CustomDateInput placeholder="تاریخ سررسید را انتخاب کنید" />}
+                                />
                             </Box>
-                        </Paper>
 
-                        {}
-                        <Paper elevation={0} sx={{ 
-                            p: 2.5, 
-                            borderRadius: 2, 
-                            border: `1px solid ${modalConfig.borderColor}`, 
-                            backgroundColor: `${modalConfig.buttonColor}03` 
-                        }}>
-                            <Typography variant="subtitle2" sx={{ ...dynamicStyles.sectionTitle, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                                <Numbers sx={{ fontSize: 18, color: modalConfig.buttonColor }} />
-                                اطلاعات
-                            </Typography>
-                            
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                                <Box>
-                                    <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: textColor, fontSize: '0.85rem' }}>
-                                        شماره نامه
-                                    </Typography>
-                                    <TextField
-                                        fullWidth
+                            <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: textColor, fontSize: '0.85rem' }}>
+                                    تاریخ نامه
+                                </Typography>
+                                <DatePicker
+                                    value={selectedLetterDate}
+                                    onChange={setSelectedLetterDate}
+                                    calendar={persian}
+                                    locale={persian_fa}
+                                    calendarPosition="bottom-right"
+                                    format="YYYY/MM/DD"
+                                    render={<CustomDateInput placeholder="تاریخ نامه را انتخاب کنید" />}
+                                />
+                            </Box>
+
+                            <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: textColor, fontSize: '0.85rem' }}>
+                                    شماره نامه
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    value={formData.letter_number}
+                                    onChange={handleInputChange('letter_number')}
+                                    placeholder="شماره نامه"
+                                    sx={dynamicStyles.inputField}
+                                />
+                            </Box>
+                        </Box>
+
+                        <Box sx={{ mt: 2.5 }}>
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
                                         size="small"
-                                        value={formData.letter_number}
-                                        onChange={handleInputChange('letter_number')}
-                                        placeholder="شماره نامه"
-                                        sx={dynamicStyles.inputField}
+                                        checked={formData.done}
+                                        onChange={handleInputChange('done')}
+                                        sx={{
+                                            color: modalConfig.buttonColor,
+                                            '&.Mui-checked': {
+                                                color: modalConfig.buttonColor,
+                                            },
+                                        }}
                                     />
-                                </Box>
-
-                                <Box>
-                                    <FormControlLabel
-                                        control={
-                                            <Checkbox
-                                                size="small"
-                                                checked={formData.done}
-                                                onChange={handleInputChange('done')}
-                                                sx={{
-                                                    color: modalConfig.buttonColor,
-                                                    '&.Mui-checked': {
-                                                        color: modalConfig.buttonColor,
-                                                    },
-                                                }}
-                                            />
-                                        }
-                                        label={
-                                            <Typography variant="body2" sx={{ fontWeight: 600, color: textColor }}>
-                                                وضعیت انجام
-                                            </Typography>
-                                        }
-                                    />
-                                    <Typography variant="caption" sx={{ color: `${textColor}60`, display: 'block', mt: 0.5 }}>
-                                        در صورت انجام شدن تسک، این گزینه را فعال کنید
+                                }
+                                label={
+                                    <Typography variant="body2" sx={{ fontWeight: 600, color: textColor }}>
+                                        وضعیت انجام
                                     </Typography>
-                                </Box>
-                            </Box>
-                        </Paper>
-                    </Box>
+                                }
+                            />
+                            <Typography variant="caption" sx={{ color: `${textColor}60`, display: 'block', mt: 0.5 }}>
+                                در صورت انجام شدن تسک، این گزینه را فعال کنید
+                            </Typography>
+                        </Box>
+                    </Paper>
                 </Box>
             </DialogContent>
 
-            {}
             <Box sx={{ 
                 p: 2.5, 
                 borderTop: `1px solid ${modalConfig.borderColor}`,

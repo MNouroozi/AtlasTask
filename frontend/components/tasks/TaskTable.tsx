@@ -25,9 +25,10 @@ import {
   Flag as FlagIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  Settings,
 } from '@mui/icons-material';
 import { convertToJalali } from '@/lib/dateConverter';
-import { MainTask, SubTask } from '@/app/types';
+import { MainTask, SubTask, TaskStatus } from '@/app/types';
 import SubTasksPanel from '@/components/subTasks/SubTasksPanel';
 
 interface TaskTableProps {
@@ -39,12 +40,12 @@ interface TaskTableProps {
   onEditSubTask: (subTask: SubTask) => void;
   onDeleteSubTask: (subTaskId: number) => void;
   onToggleSubTaskDone: (subTaskId: number, done: boolean) => void;
-  expandedTaskId?: number | null; // اضافه کردن این خط
+  expandedTaskId?: number | null;
 }
 
 type Order = 'asc' | 'desc';
 type OrderBy = keyof MainTask;
-type HeaderId = 'title' | 'letter_number' | 'letter_date' | 'description' | 'due_date' | 'actions';
+type HeaderId = 'title' | 'letter_number' | 'letter_date' | 'description' | 'due_date' | 'status' | 'actions';
 
 const headerIcons: Record<HeaderId, React.ReactNode> = {
   title: <TitleIcon fontSize="small" />,
@@ -52,7 +53,40 @@ const headerIcons: Record<HeaderId, React.ReactNode> = {
   letter_date: <DateIcon fontSize="small" />,
   description: <DescriptionIcon fontSize="small" />,
   due_date: <DateIcon fontSize="small" />,
-  actions: <FlagIcon fontSize="small" />,
+  status: <FlagIcon fontSize="small" />,
+  actions: <Settings fontSize="small" />,
+};
+
+// کامپوننت برای نمایش وضعیت
+const StatusChip = ({ status }: { status: TaskStatus }) => {
+  const getStatusConfig = (status: TaskStatus) => {
+    switch (status) {
+      case TaskStatus.FollowUp:
+        return { label: "پیگیری", color: 'primary' as const, variant: 'outlined' as const };
+      case TaskStatus.Action:
+        return { label: "اقدام", color: 'secondary' as const, variant: 'filled' as const };
+      case TaskStatus.Reminder:
+        return { label: "یادآوری", color: 'warning' as const, variant: 'outlined' as const };
+      default:
+        return { label: status, color: 'default' as const, variant: 'outlined' as const };
+    }
+  };
+
+  const config = getStatusConfig(status);
+
+  return (
+    <Chip
+      label={config.label}
+      size="small"
+      color={config.color}
+      variant={config.variant}
+      sx={{ 
+        fontSize: '0.75rem',
+        fontWeight: 500,
+        minWidth: 70,
+      }}
+    />
+  );
 };
 
 export default function TaskTable({ 
@@ -68,6 +102,7 @@ export default function TaskTable({
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<OrderBy>('title');
   const [expandedTask, setExpandedTask] = useState<number | null>(null);
+  
   const handleRequestSort = (property: OrderBy) => {
     const isAsc = orderBy === property && order === 'asc';
     setOrder(isAsc ? 'desc' : 'asc');
@@ -106,12 +141,13 @@ export default function TaskTable({
   }, [tasks, order, orderBy]);
 
   const headers: { id: HeaderId; label: string; width: string; sortable?: boolean }[] = [
-    { id: 'title', label: 'عنوان تسک', width: '18%', sortable: true },
-    { id: 'letter_number', label: 'ش . نامه', width: '12%', sortable: true },
-    { id: 'letter_date', label: 'ت . نامه', width: '12%', sortable: true },
-    { id: 'description', label: 'توضیحات', width: '28%', sortable: true },
-    { id: 'due_date', label: 'ت . مهلت', width: '12%', sortable: true },
-    { id: 'actions', label: 'عملیات', width: '18%', sortable: false },
+    { id: 'title', label: 'عنوان تسک', width: '15%', sortable: true },
+    { id: 'letter_number', label: 'ش . نامه', width: '10%', sortable: true },
+    { id: 'letter_date', label: 'ت . نامه', width: '10%', sortable: true },
+    { id: 'description', label: 'توضیحات', width: '23%', sortable: true },
+    { id: 'due_date', label: 'ت . مهلت', width: '10%', sortable: true },
+    { id: 'status', label: 'وضعیت', width: '12%', sortable: true },
+    { id: 'actions', label: 'عملیات', width: '20%', sortable: false },
   ];
 
   return (
@@ -171,7 +207,7 @@ export default function TaskTable({
         <TableBody>
           {sortedTasks.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+              <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
                 <Typography variant="body2" color="text.secondary">
                   هیچ تسکی یافت نشد
                 </Typography>
@@ -265,6 +301,10 @@ export default function TaskTable({
                       </Typography>
                     )}
                   </TableCell>
+
+                  <TableCell align="center">
+                    <StatusChip status={task.status} />
+                  </TableCell>
                   
                   <TableCell align="center">
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
@@ -325,7 +365,7 @@ export default function TaskTable({
                 </TableRow>
 
                 <TableRow>
-                  <TableCell colSpan={6} sx={{ p: 0, border: 0 }}>
+                  <TableCell colSpan={7} sx={{ p: 0, border: 0 }}>
                     <SubTasksPanel
                       taskId={task.id}
                       subTasks={task.subtasks || []}

@@ -35,6 +35,7 @@ export default function TaskFilters({ filters, onFiltersChange }: TaskFiltersPro
     const clearFilters = () => {
         onFiltersChange({
             search: '',
+            status:'',
             done: '',
         });
     };
