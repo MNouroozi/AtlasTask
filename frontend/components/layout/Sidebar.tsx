@@ -13,9 +13,7 @@ import {
     Chip,
 } from '@mui/material';
 import {
-    Dashboard as DashboardIcon,
     Task as TaskIcon,
-    PlaylistAddCheck as SubtaskIcon,
     TrendingUp as TrendingIcon,
     Flag as FlagIcon,
     Schedule as ScheduleIcon,
@@ -32,22 +30,21 @@ interface SidebarProps {
 export default function Sidebar({ open, onToggle }: SidebarProps) {
     const router = useRouter();
     const pathname = usePathname();
-    const { allTasks } = useTasks();
-    const completedCount = allTasks.filter(task => task.done).length;
-    const pendingMainTasksCount = allTasks.filter(task => !task.done).length;
+    const { allTasks, pendingCount, completedCount } = useTasks();
+
+    console.log('🔴 Sidebar rendered - pendingCount:', pendingCount, 'completedCount:', completedCount, 'allTasks length:', allTasks.length);
 
     const menuItems = [
         { 
             text: 'تسک‌ها', 
             icon: <TaskIcon sx={{ fontSize: '1.3rem' }} />, 
             path: '/', 
-            badge: pendingMainTasksCount,
+            badge: pendingCount,
         },
         { 
             text: 'گزارشات', 
             icon: <ListAlt sx={{ fontSize: '1.3rem' }} />, 
-             path: '/reports', 
-            // badge: allTasks.reduce((total, task) => total + (task.subtasks?.length || 0), 0),
+            path: '/reports', 
         },
     ];
 
@@ -132,7 +129,7 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                         px: 2.5,
                                         py: 1.5,
                                         borderRadius: 2.0,
-                                        gap: 1, // فاصله بین آیکون و متن
+                                        gap: 1,
                                         '&.Mui-selected': {
                                             backgroundColor: '#3b82f6',
                                             color: 'white',
@@ -151,9 +148,9 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                 >
                                     <ListItemIcon 
                                         sx={{ 
-                                            minWidth: 'auto', // حذف minWidth ثابت
+                                            minWidth: 'auto',
                                             color: pathname === item.path ? 'white' : '#6b7280',
-                                            margin: 0, // حذف تمام marginها
+                                            margin: 0,
                                         }}
                                     >
                                         {item.icon}
@@ -166,12 +163,12 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                             noWrap: true,
                                         }}
                                         sx={{
-                                            margin: 0, // حذف margin
+                                            margin: 0,
                                             flex: 1,
                                             textAlign: 'right',
                                         }}
                                     />
-                                    {item.badge && (
+                                    {item.badge !== undefined && item.badge > 0 && (
                                         <Chip 
                                             label={item.badge} 
                                             size="small"
@@ -225,7 +222,7 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 1 }}>
                                     <ScheduleIcon sx={{ fontSize: '1.1rem', color: '#f59e0b', mr: 0.5 }} />
                                     <Typography variant="body2" sx={{ fontWeight: 700, color: '#1e293b', fontSize: '0.9rem' }}>
-                                       {pendingMainTasksCount}
+                                        {pendingCount}
                                     </Typography>
                                 </Box>
                                 <Typography variant="caption" sx={{ display: 'block', color: '#6b7280', fontSize: '0.75rem' }}>
@@ -316,7 +313,7 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                                 },
                             }}
                         >
-                            {item.badge && (
+                            {item.badge && item.badge > 0 && (
                                 <Box
                                     sx={{
                                         position: 'absolute',
