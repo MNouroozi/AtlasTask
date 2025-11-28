@@ -3,6 +3,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "../lib/theme";
 import { Vazirmatn } from "next/font/google";
+import { TasksProvider } from '@/app/context/TasksContext';
 import DashboardLayout from "../components/layout/DashboardLayout";
 import "./globals.css";
 
@@ -25,11 +26,13 @@ export default function RootLayout({
     return (
         <html lang="fa" dir="rtl">
             <body className={vazirmatn.className}>
-                <AppRouterCacheProvider>
-                    <ThemeProvider theme={theme}>
-                        <DashboardLayout>{children}</DashboardLayout>
-                    </ThemeProvider>
-                </AppRouterCacheProvider>
+                 <TasksProvider>
+                    <AppRouterCacheProvider>
+                        <ThemeProvider theme={theme}>
+                            <DashboardLayout>{children}</DashboardLayout>
+                        </ThemeProvider>
+                    </AppRouterCacheProvider>
+                </TasksProvider>
             </body>
         </html>
     );

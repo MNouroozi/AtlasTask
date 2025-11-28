@@ -1,28 +1,31 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { MainTask } from "@/app/types";
 
+import { MainTask } from "@/app/types";
+import { useTasksContext } from "@/app/context/TasksContext";
+import { useState, useCallback, useMemo } from "react";
 export interface TaskFilters {
     search: string;
     done: string;
 }
 
 export function useTasks() {
-    const [allTasks, setAllTasks] = useState<MainTask[]>([]);
-    const [pendingTasks, setPendingTasks] = useState<MainTask[]>([]);
-    const [pendingCount, setPendingCount] = useState<number>(0);
-    const [loading, setLoading] = useState(true);
-    const [pendingLoading, setPendingLoading] = useState(false);
+    const { allTasks, setAllTasks, loading, setLoading } = useTasksContext();
+
     const [filters, setFilters] = useState<TaskFilters>({
         search: "",
         done: "",
     });
 
-    // تابع برای محاسبه pendingCount از allTasks
-    const calculatePendingCount = useCallback((tasks: MainTask[]) => {
-        return tasks.filter(task => !task.done).length;
-    }, []);
+    // محاسبه pendingCount با useMemo
+    const pendingCount = useMemo(() => {
+        return allTasks.filter(task => !task.done).length;
+    }, [allTasks]);
+
+    // محاسبه completedCount با useMemo
+    const completedCount = useMemo(() => {
+        return allTasks.filter(task => task.done).length;
+    }, [allTasks]);
 
     const fetchTasks = async () => {
         try {
@@ -35,18 +38,12 @@ export function useTasks() {
             
             const data = await response.json();
             setAllTasks(data);
-            // محاسبه pendingCount از داده‌های دریافت شده
-            setPendingCount(calculatePendingCount(data));
         } catch (error) {
             console.error('Error fetching tasks:', error);
         } finally {
             setLoading(false);
         }
     };
-
-    useEffect(() => {
-        fetchTasks();
-    }, []);
 
     const updateTask = useCallback(async (id: number, updates: Partial<MainTask>) => {
         try {
@@ -65,23 +62,16 @@ export function useTasks() {
 
             const updatedTask = await response.json();
 
-            // فقط یک بار setAllTasks فراخوانی شود
-            setAllTasks(prevTasks => {
-                const newTasks = prevTasks.map(task => 
-                    task.id === id ? updatedTask : task
-                );
-                // محاسبه pendingCount جدید
-                const newPendingCount = calculatePendingCount(newTasks);
-                setPendingCount(newPendingCount);
-                return newTasks;
-            });
+            setAllTasks(prevTasks => 
+                prevTasks.map(task => task.id === id ? updatedTask : task)
+            );
 
             return updatedTask;
         } catch (error) {
             console.error('Error updating task:', error);
             throw error;
         }
-    }, [calculatePendingCount]);
+    }, [setAllTasks]);
 
     const toggleTaskDone = useCallback(async (id: number, done: boolean) => {
         try {
@@ -100,22 +90,20 @@ export function useTasks() {
 
             const updatedTask = await response.json();
 
-            // به‌روزرسانی state
-            setAllTasks(prevTasks => {
-                const newTasks = prevTasks.map(task => 
-                    task.id === id ? updatedTask : task
-                );
-                const newPendingCount = calculatePendingCount(newTasks);
-                setPendingCount(newPendingCount);
-                return newTasks;
-            });
+            setAllTasks(prevTasks => 
+                prevTasks.map(task => 
+                    task.id === id ? { ...task, done: done } : task
+                )
+            );
+
+            console.log('🟢 Task state updated - taskId:', id, 'new done:', done);
 
             return updatedTask;
         } catch (error) {
             console.error('Error toggling task done:', error);
             throw error;
         }
-    }, [calculatePendingCount]);
+    }, [setAllTasks]);
 
     const createTask = useCallback(async (taskData: Partial<MainTask>) => {
         try {
@@ -134,20 +122,14 @@ export function useTasks() {
 
             const newTask = await response.json();
             
-            // به‌روزرسانی allTasks و pendingCount
-            setAllTasks(prev => {
-                const newTasks = [newTask, ...prev];
-                const newPendingCount = calculatePendingCount(newTasks);
-                setPendingCount(newPendingCount);
-                return newTasks;
-            });
+            setAllTasks(prev => [newTask, ...prev]);
             
             return newTask;
         } catch (error) {
             console.error('Error creating task:', error);
             throw error;
         }
-    }, [calculatePendingCount]);
+    }, [setAllTasks]);
 
     const deleteTask = useCallback(async (id: number) => {
         try {
@@ -159,39 +141,34 @@ export function useTasks() {
                 throw new Error(`خطا در حذف تسک: ${response.status}`);
             }
 
-            // به‌روزرسانی allTasks و pendingCount
-            setAllTasks(prev => {
-                const newTasks = prev.filter(task => task.id !== id);
-                const newPendingCount = calculatePendingCount(newTasks);
-                setPendingCount(newPendingCount);
-                return newTasks;
-            });
+            setAllTasks(prev => prev.filter(task => task.id !== id));
         
         } catch (error) {
             console.error('Error deleting task:', error);
             throw error;
         }
-    }, [calculatePendingCount]);
+    }, [setAllTasks]);
 
-    const filteredTasks = allTasks.filter((task) => {
-        const matchesSearch = !filters.search ||
-            task.title.toLowerCase().includes(filters.search.toLowerCase()) ||
-            (task.description && task.description.toLowerCase().includes(filters.search.toLowerCase()));
+    const filteredTasks = useMemo(() => {
+        return allTasks.filter((task) => {
+            const matchesSearch = !filters.search ||
+                task.title.toLowerCase().includes(filters.search.toLowerCase()) ||
+                (task.description && task.description.toLowerCase().includes(filters.search.toLowerCase()));
 
-        const matchesDone = filters.done === "" || 
-            (filters.done === "done" && task.done) ||
-            (filters.done === "pending" && !task.done);
+            const matchesDone = filters.done === "" || 
+                (filters.done === "done" && task.done) ||
+                (filters.done === "pending" && !task.done);
 
-        return matchesSearch && matchesDone;
-    });
+            return matchesSearch && matchesDone;
+        });
+    }, [allTasks, filters]);
 
     return {
         tasks: filteredTasks,    
         allTasks: allTasks,      
-        pendingTasks,
         pendingCount,
+        completedCount,
         loading,
-        pendingLoading,
         filters,
         setFilters,
         createTask,

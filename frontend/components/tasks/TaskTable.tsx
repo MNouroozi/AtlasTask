@@ -267,24 +267,30 @@ export default function TaskTable({
                   
                   <TableCell align="center">
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
-                      <Tooltip title={task.done ? 'انجام شده - کلیک برای تغییر به در حال انجام' : 'در حال انجام - کلیک برای تغییر به انجام شده'}>
-                        <Chip
-                          label={task.done ? 'انجام شده' : 'در حال انجام'}
-                          size="small"
-                          color={task.done ? "success" : "warning"}
-                          variant={task.done ? "filled" : "outlined"}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onToggleDone(task.id, !task.done);
-                          }}
-                          sx={{ 
-                            cursor: 'pointer',
-                            '&:hover': {
-                              opacity: 0.8,
-                            }
-                          }}
-                        />
-                      </Tooltip>
+                    <Tooltip title={task.done ? 'انجام شده - کلیک برای تغییر به در حال انجام' : 'در حال انجام - کلیک برای تغییر به انجام شده'}>
+                      <Chip
+                        label={task.done ? 'انجام شده' : 'در حال انجام'}
+                        size="small"
+                        color={task.done ? "success" : "warning"}
+                        variant={task.done ? "filled" : "outlined"}
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          console.log('شروع تغییر وضعیت تسک:', task.id, 'به:', !task.done);
+                          try {
+                            await onToggleDone(task.id, !task.done);
+                            console.log('تغییر وضعیت تسک با موفقیت انجام شد');
+                          } catch (error) {
+                            console.error('خطا در تغییر وضعیت تسک:', error);
+                          }
+                        }}
+                        sx={{ 
+                          cursor: 'pointer',
+                          '&:hover': {
+                            opacity: 0.8,
+                          }
+                        }}
+                      />
+                    </Tooltip>
 
                       <Box sx={{ display: 'flex', gap: 0.5 }}>
                         <Tooltip title="ویرایش">

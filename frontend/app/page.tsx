@@ -175,7 +175,7 @@ export default function TasksPage() {
             
             refetchTasks();
             showSuccessToast(`زیرکار ${editingSubTask ? 'با موفقیت ویرایش شد' : 'جدید با موفقیت ایجاد شد'}`);
-            handleCloseSubTaskModal(); // استفاده از تابعی که قبلاً تعریف شده
+            handleCloseSubTaskModal();
         } catch (error) {
             showErrorToast(`خطا در ${editingSubTask ? 'ویرایش' : 'ایجاد'} زیرکار`);
         } finally {
@@ -226,7 +226,6 @@ export default function TasksPage() {
 
     return (
         <Box>
-            {/* کامپوننت ToastContainer برای نمایش toastها */}
             <ToastContainer
                 position="top-left"
                 autoClose={3000}
