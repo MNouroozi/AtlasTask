@@ -2,16 +2,9 @@ import type { Metadata } from "next";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v14-appRouter";
 import { ThemeProvider } from "@mui/material/styles";
 import { theme } from "../lib/theme";
-import { Vazirmatn } from "next/font/google";
 import { TasksProvider } from '@/app/context/TasksContext';
 import DashboardLayout from "../components/layout/DashboardLayout";
 import "./globals.css";
-
-const vazirmatn = Vazirmatn({
-    subsets: ["arabic"],
-    display: "swap",
-    variable: "--font-vazirmatn",
-});
 
 export const metadata: Metadata = {
     title: "AtlasTask - مدیریت تسک‌ها",
@@ -25,7 +18,13 @@ export default function RootLayout({
 }) {
     return (
         <html lang="fa" dir="rtl">
-            <body className={vazirmatn.className}>
+            <head>
+                <link
+                    href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;200;300;400;500;600;700;800;900&display=swap"
+                    rel="stylesheet"
+                />
+            </head>
+            <body>
                  <TasksProvider>
                     <AppRouterCacheProvider>
                         <ThemeProvider theme={theme}>
