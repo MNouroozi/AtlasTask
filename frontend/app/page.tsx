@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import {
     Box,
     Typography,
@@ -20,6 +21,8 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner';
 import { MainTask, CreateSubTaskData, SubTask } from '@/app/types';
 
 export default function TasksPage() {
+    const searchParams = useSearchParams();
+    
     const {
         tasks,
         loading,
@@ -38,6 +41,22 @@ export default function TasksPage() {
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
     const [editingSubTask, setEditingSubTask] = useState<SubTask | undefined>();
+
+    // فیلتر کردن بر اساس URL parameters
+    useEffect(() => {
+        const filter = searchParams.get('filter');
+        const done = searchParams.get('done');
+        
+        if (filter === 'overdue') {
+            setFilters(prev => ({ ...prev, search: '', done: 'pending' }));
+        } else if (filter === 'today') {
+            setFilters(prev => ({ ...prev, search: '', done: 'pending' }));
+        } else if (done === 'done') {
+            setFilters(prev => ({ ...prev, done: 'done' }));
+        } else if (done === 'pending') {
+            setFilters(prev => ({ ...prev, done: 'pending' }));
+        }
+    }, [searchParams, setFilters]);
 
     const showSuccessToast = (message: string) => {
         toast.success(message, {
@@ -223,6 +242,31 @@ export default function TasksPage() {
         }
     };
 
+    // فیلتر کردن تسک‌ها بر اساس URL parameters
+    const filteredTasks = useMemo(() => {
+        const filter = searchParams.get('filter');
+        const done = searchParams.get('done');
+        
+        let filtered = tasks;
+
+        if (filter === 'overdue') {
+            filtered = tasks.filter(task => 
+                task.due_date && new Date(task.due_date) < new Date() && !task.done
+            );
+        } else if (filter === 'today') {
+            const today = new Date().toISOString().split('T')[0];
+            filtered = tasks.filter(task => 
+                task.due_date && task.due_date.split('T')[0] === today && !task.done
+            );
+        } else if (done === 'done') {
+            filtered = tasks.filter(task => task.done);
+        } else if (done === 'pending') {
+            filtered = tasks.filter(task => !task.done);
+        }
+
+        return filtered;
+    }, [tasks, searchParams]);
+
     return (
         <Box>
             <ToastContainer
@@ -264,7 +308,7 @@ export default function TasksPage() {
                         <LoadingSpinner />
                     ) : (
                         <TaskTable
-                            tasks={tasks}
+                            tasks={filteredTasks}
                             onEdit={handleEditTask}
                             onDelete={handleDeleteTask}
                             onToggleDone={handleToggleDone}

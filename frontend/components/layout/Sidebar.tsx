@@ -18,6 +18,7 @@ import {
     Flag as FlagIcon,
     Schedule as ScheduleIcon,
     ListAlt,
+    DashboardCustomizeRounded,
 } from '@mui/icons-material';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTasks } from '@/app/hooks/useTasks'; 
@@ -32,19 +33,17 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
     const pathname = usePathname();
     const { allTasks, pendingCount, completedCount } = useTasks();
 
-    console.log('🔴 Sidebar rendered - pendingCount:', pendingCount, 'completedCount:', completedCount, 'allTasks length:', allTasks.length);
-
     const menuItems = [
+        { 
+            text: 'داشبورد', 
+            icon: <DashboardCustomizeRounded sx={{ fontSize: '1.3rem' }} />, 
+            path: '/reports', 
+        },
         { 
             text: 'تسک‌ها', 
             icon: <TaskIcon sx={{ fontSize: '1.3rem' }} />, 
             path: '/', 
             badge: pendingCount,
-        },
-        { 
-            text: 'گزارشات', 
-            icon: <ListAlt sx={{ fontSize: '1.3rem' }} />, 
-            path: '/reports', 
         },
     ];
 
