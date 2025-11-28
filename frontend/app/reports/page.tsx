@@ -31,7 +31,7 @@ import { useTasks } from '@/app/hooks/useTasks';
 import { convertToJalali } from '@/lib/dateConverter';
 import { useRouter } from 'next/navigation';
 
-type ViewMode = 'overview' | 'overdue' | 'today' | 'completed' | 'pending';
+type ViewMode = 'overview' | 'overdue' | 'today' | 'completed' | 'pending' | 'subtasks';
 
 export default function ReportsPage() {
     const { allTasks, pendingCount, completedCount } = useTasks();
@@ -68,6 +68,22 @@ export default function ReportsPage() {
         const subtaskCompletionRate = totalSubtasks > 0 ? 
             (completedSubtasks / totalSubtasks) * 100 : 0;
 
+        const allSubtasks = allTasks.flatMap(task => 
+            (task.subtasks || []).map(subtask => ({
+                ...subtask,
+                mainTaskTitle: task.title,
+                mainTaskId: task.id
+            }))
+        );
+
+        const overdueSubtasks = allSubtasks.filter(subtask => 
+            subtask.created_at && new Date(subtask.created_at) < today && !subtask.done
+        );
+
+        const todaySubtasks = allSubtasks.filter(subtask => 
+            subtask.created_at && subtask.created_at.split('T')[0] === todayString && !subtask.done
+        );
+
         return {
             overdueTasks,
             todayTasks,
@@ -77,6 +93,9 @@ export default function ReportsPage() {
             completionRate,
             subtaskCompletionRate,
             totalTasks: allTasks.length,
+            allSubtasks,
+            overdueSubtasks,
+            todaySubtasks,
         };
     }, [allTasks, completedCount, todayString]);
 
@@ -102,6 +121,13 @@ export default function ReportsPage() {
         router.push(`/?${params.toString()}`);
     };
 
+    const handleSubTaskClick = (subtask: any) => {
+        const params = new URLSearchParams();
+        params.set('taskId', subtask.mainTaskId.toString());
+        params.set('subtaskId', subtask.id.toString());
+        router.push(`/?${params.toString()}`);
+    };
+
     const handleViewInTasks = (filterType: ViewMode) => {
         const params = new URLSearchParams();
         
@@ -117,6 +143,9 @@ export default function ReportsPage() {
                 break;
             case 'pending':
                 params.set('done', 'pending');
+                break;
+            case 'subtasks':
+                params.set('view', 'subtasks');
                 break;
         }
         
@@ -145,7 +174,7 @@ export default function ReportsPage() {
                 height: '100%',
                 background: `linear-gradient(135deg, ${alpha(color, 0.1)} 0%, ${alpha(color, 0.05)} 100%)`,
                 border: `1px solid ${alpha(color, 0.2)}`,
-                borderRadius: 3,
+                borderRadius: 2,
                 transition: 'all 0.3s ease',
                 cursor: 'pointer',
                 '&:hover': {
@@ -155,49 +184,49 @@ export default function ReportsPage() {
             }}
             onClick={onClick}
         >
-            <CardContent sx={{ p: 3 }}>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+            <CardContent sx={{ p: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                     <Box
                         sx={{
                             p: 1,
-                            borderRadius: 2,
+                            borderRadius: 1.5,
                             backgroundColor: alpha(color, 0.1),
                             color: color,
-                            mr: 2,
+                            mr: 1.5,
                         }}
                     >
                         {icon}
                     </Box>
-                    <Box sx={{ flex: 1 }}>
-                        <Typography variant="h4" fontWeight="bold" color={color}>
+                    <Box sx={{ flex: 1, textAlign: 'right' }}>
+                        <Typography variant="h4" fontWeight="bold" color={color} fontSize="1.5rem">
                             {convertToPersianNumbers(value)}
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" fontWeight="500">
+                        <Typography variant="body2" color="text.secondary" fontWeight="500" fontSize="0.8rem">
                             {title}
                         </Typography>
                     </Box>
                 </Box>
                 {progress !== undefined && (
-                    <Box sx={{ mt: 2 }}>
+                    <Box sx={{ mt: 1.5 }}>
                         <LinearProgress 
                             variant="determinate" 
                             value={progress} 
                             sx={{ 
-                                height: 6, 
-                                borderRadius: 3,
+                                height: 4, 
+                                borderRadius: 2,
                                 backgroundColor: alpha(color, 0.2),
                                 '& .MuiLinearProgress-bar': {
                                     backgroundColor: color,
                                 }
                             }} 
                         />
-                        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block', fontSize: '0.7rem' }}>
                             {subtitle}
                         </Typography>
                     </Box>
                 )}
                 {!progress && (
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
                         {subtitle}
                     </Typography>
                 )}
@@ -209,7 +238,7 @@ export default function ReportsPage() {
         <Box>
             <ListItem 
                 sx={{ 
-                    py: 2,
+                    py: 1,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
                     flexDirection: 'column',
@@ -220,38 +249,40 @@ export default function ReportsPage() {
                 }}
                 onClick={() => handleTaskClick(task)}
             >
-                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}>
-                    <ListItemIcon sx={{ minWidth: 36, mr: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 0.5 }}>
+                    <ListItemIcon sx={{ minWidth: 32, mr: 1 }}>
                         <Box
                             sx={{
-                                width: 8,
-                                height: 8,
+                                width: 6,
+                                height: 6,
                                 borderRadius: '50%',
                                 backgroundColor: task.done ? '#10b981' : '#f59e0b',
                             }}
                         />
                     </ListItemIcon>
                     <Typography 
-                        variant="body1" 
+                        variant="body2" 
                         fontWeight="500"
                         sx={{ 
                             textDecoration: task.done ? 'line-through' : 'none',
                             color: task.done ? 'text.secondary' : 'text.primary',
-                            flex: 1
+                            flex: 1,
+                            textAlign: 'right',
+                            fontSize: '0.8rem'
                         }}
                     >
                         {task.title}
                     </Typography>
                 </Box>
                 
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', ml: 7 }}>
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mr: 6 }}>
                     {task.due_date && (
                         <Chip
                             label={convertToJalali(task.due_date)}
                             size="small"
                             variant="outlined"
                             color={new Date(task.due_date) < today ? "error" : "primary"}
-                            sx={{ height: 24, fontSize: '0.75rem' }}
+                            sx={{ height: 20, fontSize: '0.65rem' }}
                         />
                     )}
                     {task.subtasks && task.subtasks.length > 0 && (
@@ -260,7 +291,7 @@ export default function ReportsPage() {
                             size="small"
                             variant="outlined"
                             color="info"
-                            sx={{ height: 24, fontSize: '0.75rem' }}
+                            sx={{ height: 20, fontSize: '0.65rem' }}
                         />
                     )}
                     <Chip
@@ -268,7 +299,73 @@ export default function ReportsPage() {
                         size="small"
                         color={task.done ? "success" : "warning"}
                         variant={task.done ? "filled" : "outlined"}
-                        sx={{ height: 24, fontSize: '0.75rem' }}
+                        sx={{ height: 20, fontSize: '0.65rem' }}
+                    />
+                </Box>
+            </ListItem>
+        </Box>
+    );
+
+    const SubTaskListItem = ({ subtask }: { subtask: any }) => (
+        <Box>
+            <ListItem 
+                sx={{ 
+                    py: 1,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    '&:hover': {
+                        backgroundColor: alpha(theme.palette.primary.main, 0.04),
+                    }
+                }}
+                onClick={() => handleSubTaskClick(subtask)}
+            >
+                <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 0.5 }}>
+                    <ListItemIcon sx={{ minWidth: 32, mr: 1 }}>
+                        <Box
+                            sx={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: '50%',
+                                backgroundColor: subtask.done ? '#10b981' : '#f59e0b',
+                            }}
+                        />
+                    </ListItemIcon>
+                    <Box sx={{ flex: 1, textAlign: 'right' }}>
+                        <Typography 
+                            variant="body2" 
+                            fontWeight="500"
+                            sx={{ 
+                                textDecoration: subtask.done ? 'line-through' : 'none',
+                                color: subtask.done ? 'text.secondary' : 'text.primary',
+                                fontSize: '0.8rem'
+                            }}
+                        >
+                            {subtask.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" fontSize="0.7rem">
+                            {subtask.mainTaskTitle}
+                        </Typography>
+                    </Box>
+                </Box>
+                
+                <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', mr: 6 }}>
+                    {subtask.due_date && (
+                        <Chip
+                            label={convertToJalali(subtask.due_date)}
+                            size="small"
+                            variant="outlined"
+                            color={new Date(subtask.due_date) < today ? "error" : "primary"}
+                            sx={{ height: 20, fontSize: '0.65rem' }}
+                        />
+                    )}
+                    <Chip
+                        label={subtask.done ? 'انجام شده' : 'در حال انجام'}
+                        size="small"
+                        color={subtask.done ? "success" : "warning"}
+                        variant={subtask.done ? "filled" : "outlined"}
+                        sx={{ height: 20, fontSize: '0.65rem' }}
                     />
                 </Box>
             </ListItem>
@@ -282,7 +379,8 @@ export default function ReportsPage() {
         color,
         emptyMessage,
         showViewAllButton = false,
-        viewAllFilter
+        viewAllFilter,
+        type = 'tasks'
     }: {
         title: string;
         tasks: any[];
@@ -291,35 +389,37 @@ export default function ReportsPage() {
         emptyMessage: string;
         showViewAllButton?: boolean;
         viewAllFilter?: ViewMode;
+        type?: 'tasks' | 'subtasks';
     }) => (
         <Card 
             sx={{ 
                 height: '100%',
-                borderRadius: 3,
+                borderRadius: 2,
                 border: `1px solid ${alpha(color, 0.2)}`,
             }}
         >
             <CardContent sx={{ p: 0 }}>
                 <Box 
                     sx={{ 
-                        p: 2, 
+                        p: 1.5, 
                         backgroundColor: alpha(color, 0.05),
                         borderBottom: `1px solid ${alpha(color, 0.1)}`,
                     }}
                 >
-                    <Box sx={{ display: 'flex', alignItems: 'center', mb: showViewAllButton ? 1 : 0 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', mb: showViewAllButton ? 0.5 : 0 }}>
                         <Box sx={{ color, mr: 1 }}>{icon}</Box>
-                        <Typography variant="h6" fontWeight="600">
+                        <Typography variant="h6" fontWeight="600" fontSize="0.9rem" sx={{ flex: 1, textAlign: 'right' }}>
                             {title}
                         </Typography>
                         <Chip 
                             label={convertToPersianNumbers(tasks.length)} 
                             size="small" 
                             sx={{ 
-                                ml: 'auto',
                                 backgroundColor: color,
                                 color: 'white',
-                                fontWeight: 'bold'
+                                fontWeight: 'bold',
+                                fontSize: '0.7rem',
+                                height: 20
                             }} 
                         />
                     </Box>
@@ -329,7 +429,7 @@ export default function ReportsPage() {
                             onClick={() => handleViewInTasks(viewAllFilter)}
                             sx={{ 
                                 color,
-                                fontSize: '0.75rem',
+                                fontSize: '0.7rem',
                                 p: 0,
                                 minWidth: 'auto',
                                 '&:hover': {
@@ -342,17 +442,20 @@ export default function ReportsPage() {
                     )}
                 </Box>
                 
-                <Box sx={{ maxHeight: 400, overflow: 'auto' }}>
+                <Box sx={{ maxHeight: 300, overflow: 'auto' }}>
                     {tasks.length === 0 ? (
-                        <Box sx={{ p: 3, textAlign: 'center' }}>
-                            <Typography variant="body2" color="text.secondary">
+                        <Box sx={{ p: 2, textAlign: 'center' }}>
+                            <Typography variant="body2" color="text.secondary" fontSize="0.8rem">
                                 {emptyMessage}
                             </Typography>
                         </Box>
                     ) : (
-                        tasks.map((task, index) => (
-                            <Box key={task.id}>
-                                <TaskListItem task={task} />
+                        tasks.map((item, index) => (
+                            <Box key={item.id}>
+                                {type === 'subtasks' ? 
+                                    <SubTaskListItem subtask={item} /> : 
+                                    <TaskListItem task={item} />
+                                }
                                 {index < tasks.length - 1 && <Divider variant="inset" component="li" />}
                             </Box>
                         ))
@@ -364,11 +467,11 @@ export default function ReportsPage() {
 
     const renderOverview = () => (
         <Box>
-            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 4 }}>
+            <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 3, textAlign: 'right', fontSize: '1.5rem' }}>
                 📊 گزارشات جامع
             </Typography>
 
-            <Grid container spacing={3}>
+            <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={3}>
                     <StatCard
                         title="کل تسک‌ها"
@@ -411,6 +514,7 @@ export default function ReportsPage() {
                         color="#8b5cf6"
                         icon={<SubTaskIcon />}
                         progress={stats.subtaskCompletionRate}
+                        onClick={() => handleCategoryClick('subtasks', 'همه زیرکارها')}
                     />
                 </Grid>
 
@@ -438,127 +542,102 @@ export default function ReportsPage() {
                     />
                 </Grid>
 
-                <Grid item xs={12}>
-                    <Card sx={{ 
-                        borderRadius: 3, 
-                        border: '1px solid', 
-                        borderColor: 'divider',
-                        background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'
-                    }}>
-                        <CardContent sx={{ p: 4 }}>
-                            <Typography variant="h5" fontWeight="600" gutterBottom sx={{ mb: 3 }}>
-                                📈 خلاصه عملکرد
-                            </Typography>
-                            <Grid container spacing={4}>
-                                <Grid item xs={12} sm={6} md={3}>
-                                    <Box sx={{ textAlign: 'center', p: 2 }}>
-                                        <Typography variant="h2" fontWeight="bold" color="#10b981">
-                                            {convertToPersianNumbers(Math.round(stats.completionRate))}%
-                                        </Typography>
-                                        <Typography variant="body1" color="text.secondary" fontWeight="500">
-                                            نرخ تکمیل تسک‌ها
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={3}>
-                                    <Box sx={{ textAlign: 'center', p: 2 }}>
-                                        <Typography variant="h2" fontWeight="bold" color="#8b5cf6">
-                                            {convertToPersianNumbers(Math.round(stats.subtaskCompletionRate))}%
-                                        </Typography>
-                                        <Typography variant="body1" color="text.secondary" fontWeight="500">
-                                            نرخ تکمیل زیرکارها
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={3}>
-                                    <Box sx={{ textAlign: 'center', p: 2 }}>
-                                        <Typography variant="h2" fontWeight="bold" color="#f59e0b">
-                                            {convertToPersianNumbers(stats.overdueTasks.length)}
-                                        </Typography>
-                                        <Typography variant="body1" color="text.secondary" fontWeight="500">
-                                            تسک‌های معوقه
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={3}>
-                                    <Box sx={{ textAlign: 'center', p: 2 }}>
-                                        <Typography variant="h2" fontWeight="bold" color="#3b82f6">
-                                            {convertToPersianNumbers(stats.todayTasks.length)}
-                                        </Typography>
-                                        <Typography variant="body1" color="text.secondary" fontWeight="500">
-                                            تسک‌های امروز
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                            </Grid>
-                        </CardContent>
-                    </Card>
+                <Grid item xs={12} lg={6}>
+                    <TaskListCard
+                        title="⏰ زیرکارهای معوقه"
+                        tasks={stats.overdueSubtasks}
+                        icon={<WarningIcon color="error" />}
+                        color="#ef4444"
+                        emptyMessage="هیچ زیرکار معوقه وجود ندارد ✅"
+                        type="subtasks"
+                    />
+                </Grid>
+
+                <Grid item xs={12} lg={6}>
+                    <TaskListCard
+                        title="📅 زیرکارهای امروز"
+                        tasks={stats.todaySubtasks}
+                        icon={<TodayIcon color="primary" />}
+                        color="#3b82f6"
+                        emptyMessage="هیچ زیرکار برای امروز وجود ندارد 🎉"
+                        type="subtasks"
+                    />
                 </Grid>
             </Grid>
         </Box>
     );
 
     const renderCategoryView = () => {
-        let filteredTasks: any[] = [];
+        let filteredItems: any[] = [];
         let title = '';
         let color = '#3b82f6';
         let icon = <TaskIcon />;
         let filterType: ViewMode = 'overview';
+        let type: 'tasks' | 'subtasks' = 'tasks';
 
         switch (viewMode) {
             case 'overdue':
-                filteredTasks = stats.overdueTasks;
+                filteredItems = stats.overdueTasks;
                 title = 'تسک‌های معوقه';
                 color = '#ef4444';
                 icon = <WarningIcon />;
                 filterType = 'overdue';
                 break;
             case 'today':
-                filteredTasks = stats.todayTasks;
+                filteredItems = stats.todayTasks;
                 title = 'تسک‌های امروز';
                 color = '#3b82f6';
                 icon = <TodayIcon />;
                 filterType = 'today';
                 break;
             case 'completed':
-                filteredTasks = allTasks.filter(task => task.done);
+                filteredItems = allTasks.filter(task => task.done);
                 title = 'تسک‌های انجام شده';
                 color = '#10b981';
                 icon = <CheckCircleIcon />;
                 filterType = 'completed';
                 break;
             case 'pending':
-                filteredTasks = allTasks.filter(task => !task.done);
+                filteredItems = allTasks.filter(task => !task.done);
                 title = 'تسک‌های در حال انجام';
                 color = '#f59e0b';
                 icon = <ScheduleIcon />;
                 filterType = 'pending';
                 break;
+            case 'subtasks':
+                filteredItems = stats.allSubtasks;
+                title = 'همه زیرکارها';
+                color = '#8b5cf6';
+                icon = <SubTaskIcon />;
+                filterType = 'subtasks';
+                type = 'subtasks';
+                break;
         }
 
         return (
             <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3, gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 1, flexWrap: 'wrap' }}>
                     <Button
                         startIcon={<BackIcon />}
                         onClick={handleBackToOverview}
                         variant="outlined"
+                        size="small"
                     >
                         بازگشت به گزارشات
                     </Button>
-                    <Box sx={{ color, display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ color, display: 'flex', alignItems: 'center', gap: 0.5 }}>
                         {icon}
-                        <Typography variant="h4" fontWeight="bold">
+                        <Typography variant="h4" fontWeight="bold" fontSize="1.3rem">
                             {title}
                         </Typography>
                     </Box>
                     <Chip 
-                        label={convertToPersianNumbers(filteredTasks.length)} 
+                        label={convertToPersianNumbers(filteredItems.length)} 
                         sx={{ 
                             backgroundColor: color,
                             color: 'white',
                             fontWeight: 'bold',
-                            fontSize: '1rem'
+                            fontSize: '0.8rem'
                         }} 
                     />
                     <Button
@@ -567,6 +646,7 @@ export default function ReportsPage() {
                         sx={{ 
                             ml: 'auto',
                             backgroundColor: color,
+                            fontSize: '0.8rem',
                             '&:hover': {
                                 backgroundColor: color,
                                 opacity: 0.9,
@@ -579,17 +659,18 @@ export default function ReportsPage() {
 
                 <TaskListCard
                     title={title}
-                    tasks={filteredTasks}
+                    tasks={filteredItems}
                     icon={icon}
                     color={color}
                     emptyMessage={`هیچ ${title} وجود ندارد`}
+                    type={type}
                 />
             </Box>
         );
     };
 
     return (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: 2 }}>
             {viewMode === 'overview' ? renderOverview() : renderCategoryView()}
         </Box>
     );
