@@ -136,7 +136,6 @@ export default function TasksPage() {
         return selectedTask ? handleUpdateTask(taskData) : handleCreateTask(taskData);
     };
 
-    // توابع مدیریت ساب‌تسک
     const handleAddSubTask = (taskId: number) => {
         setEditingSubTask(undefined);
         setSelectedTaskId(taskId);

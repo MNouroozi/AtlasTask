@@ -72,7 +72,7 @@ export default function TaskModal({
                 letter_number: task.letter_number || '',
                 done: task.done || false,
             });
-            // استفاده از تابع formatDateForPicker برای مقداردهی اولیه
+            
             setSelectedDueDate(task.due_date ? formatDateForPicker(task.due_date) : null);
             setSelectedLetterDate(task.letter_date ? formatDateForPicker(task.letter_date) : null);
         } else {
@@ -87,7 +87,7 @@ export default function TaskModal({
         }
     }, [task, open]);
 
-    // رنگ‌های متفاوت برای مودال ویرایش و جدید
+    
     const modalConfig = task ? {
         headerColor: '#f59e0b',
         headerBackground: `linear-gradient(135deg, #f59e0b08 0%, #f59e0b03 100%)`,
@@ -102,7 +102,7 @@ export default function TaskModal({
         buttonColor: '#3b82f6',
     };
 
-    // استایل‌های داینامیک
+    
     const dynamicStyles = {
         dialogPaper: {
             borderRadius: 3,
@@ -217,7 +217,7 @@ export default function TaskModal({
                 sx: dynamicStyles.dialogPaper,
             }}
         >
-            {/* هدر مودال */}
+            {}
             <DialogTitle sx={{ 
                 p: 2.5, 
                 pb: 2,
@@ -281,7 +281,7 @@ export default function TaskModal({
 
             <DialogContent sx={{ p: 3, mt: 3.5 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    {/* عنوان */}
+                    {}
                     <Box>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: textColor }}>
                             <Box sx={{ 
@@ -307,7 +307,7 @@ export default function TaskModal({
                         />
                     </Box>
 
-                    {/* توضیحات */}
+                    {}
                     <Box>
                         <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: textColor }}>
                             <Box sx={{ 
@@ -335,9 +335,9 @@ export default function TaskModal({
                         />
                     </Box>
 
-                    {/* بخش تاریخ‌ها و اطلاعات */}
+                    {}
                     <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, gap: 3 }}>
-                        {/* تاریخ‌ها */}
+                        {}
                         <Paper elevation={0} sx={{ 
                             p: 2.5, 
                             borderRadius: 2, 
@@ -382,7 +382,7 @@ export default function TaskModal({
                             </Box>
                         </Paper>
 
-                        {/* اطلاعات جانبی */}
+                        {}
                         <Paper elevation={0} sx={{ 
                             p: 2.5, 
                             borderRadius: 2, 
@@ -440,7 +440,7 @@ export default function TaskModal({
                 </Box>
             </DialogContent>
 
-            {/* فوتر مودال */}
+            {}
             <Box sx={{ 
                 p: 2.5, 
                 borderTop: `1px solid ${modalConfig.borderColor}`,

@@ -22,11 +22,11 @@ import { usePathname } from 'next/navigation';
 interface HeaderProps {
     onMenuClick: () => void;
     sidebarOpen: boolean;
-    // تنظیمات قابل تغییر
-    headerHeight?: number; // ارتفاع هدر (پیکسل)
-    primaryColor?: string; // رنگ اصلی
-    backgroundColor?: string; // رنگ پس‌زمینه
-    textColor?: string; // رنگ متن
+    
+    headerHeight?: number; 
+    primaryColor?: string; 
+    backgroundColor?: string; 
+    textColor?: string; 
 }
 
 export default function Header({ 
@@ -52,7 +52,7 @@ export default function Header({
         }
     };
 
-    // استایل‌های داینامیک بر اساس props
+    
     const dynamicStyles = {
         appBar: {
             backgroundColor: backgroundColor,
@@ -96,7 +96,7 @@ export default function Header({
             sx={dynamicStyles.appBar}
         >
             <Toolbar sx={dynamicStyles.toolbar}>
-                {/* سمت راست - منو و عنوان */}
+                {}
                 <Box sx={{ display: 'flex', alignItems: 'center', flex: 1, gap: 2 }}>
                     <IconButton
                         edge="start"
@@ -154,7 +154,7 @@ export default function Header({
                     </Box>
                 </Box>
                 
-                {/* سمت چپ - ناتیفیکیشن و کاربر */}
+                {}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Badge 
                         badgeContent={3} 
@@ -174,7 +174,7 @@ export default function Header({
                         </IconButton>
                     </Badge>
                     
-                    {/* بخش کاربر */}
+                    {}
                     <Box 
                         sx={{ 
                             display: 'flex', 
