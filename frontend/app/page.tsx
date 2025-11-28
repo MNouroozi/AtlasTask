@@ -8,10 +8,9 @@ import {
     Card,
     CardContent,
 } from '@mui/material';
-import {
-    Add as AddIcon,
-} from '@mui/icons-material';
-import Swal from 'sweetalert2';
+import { Add as AddIcon } from '@mui/icons-material';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { useTasks } from '@/app/hooks/useTasks';
 import TaskTable from '@/components/tasks/TaskTable';
 import TaskFilters from '@/components/tasks/TaskFilters';
@@ -40,46 +39,36 @@ export default function TasksPage() {
     const [saveLoading, setSaveLoading] = useState(false);
     const [editingSubTask, setEditingSubTask] = useState<SubTask | undefined>();
 
-    const showSuccessAlert = (title: string) => {
-        Swal.fire({
-            title: title,
-            icon: 'success',
-            confirmButtonText: 'باشه',
-            confirmButtonColor: '#3b82f6',
-            width: 400,
-            customClass: {
-                popup: 'rounded-2xl'
-            }
+    const showSuccessToast = (message: string) => {
+        toast.success(message, {
+            position: "top-left",
+            autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            rtl: true,
+            theme: "light",
         });
     };
 
-    const showErrorAlert = (title: string) => {
-        Swal.fire({
-            title: title,
-            icon: 'error',
-            confirmButtonText: 'متوجه شدم',
-            confirmButtonColor: '#ef4444',
-            width: 400,
-            customClass: {
-                popup: 'rounded-2xl'
-            }
+    const showErrorToast = (message: string) => {
+        toast.error(message, {
+            position: "top-left",
+            autoClose: 4000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            rtl: true,
+            theme: "light",
         });
     };
 
-    const showConfirmDialog = (title: string, confirmButtonText: string = 'بله، حذف شود') => {
-        return Swal.fire({
-            title: title,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: confirmButtonText,
-            cancelButtonText: 'انصراف',
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#6b7280',
-            width: 450,
-            customClass: {
-                popup: 'rounded-2xl'
-            }
-        });
+    const handleCloseSubTaskModal = () => {
+        setSubTaskModalOpen(false);
+        setEditingSubTask(undefined);
+        setSelectedTaskId(null);
     };
 
     const handleCreateTask = async (taskData: Partial<MainTask>) => {
@@ -87,9 +76,9 @@ export default function TasksPage() {
         try {
             await createTask(taskData);
             setTaskModalOpen(false);
-            showSuccessAlert('تسک جدید با موفقیت ایجاد شد');
+            showSuccessToast('تسک جدید با موفقیت ایجاد شد');
         } catch (error) {
-            showErrorAlert('خطا در ایجاد تسک');
+            showErrorToast('خطا در ایجاد تسک');
         } finally {
             setSaveLoading(false);
         }
@@ -103,9 +92,9 @@ export default function TasksPage() {
             await updateTask(selectedTask.id, taskData);
             setTaskModalOpen(false);
             setSelectedTask(undefined);
-            showSuccessAlert('تسک با موفقیت ویرایش شد');
+            showSuccessToast('تسک با موفقیت ویرایش شد');
         } catch (error) {
-            showErrorAlert('خطا در ویرایش تسک');
+            showErrorToast('خطا در ویرایش تسک');
         } finally {
             setSaveLoading(false);
         }
@@ -117,14 +106,14 @@ export default function TasksPage() {
     };
 
     const handleDeleteTask = async (taskId: number) => {
-        const result = await showConfirmDialog('آیا از حذف این تسک اطمینان دارید؟', 'بله، حذف شود');
+        const confirmed = window.confirm('آیا از حذف این تسک اطمینان دارید؟');
         
-        if (result.isConfirmed) {
+        if (confirmed) {
             try {
                 await deleteTask(taskId);
-                showSuccessAlert('تسک با موفقیت حذف شد');
+                showSuccessToast('تسک با موفقیت حذف شد');
             } catch (error) {
-                showErrorAlert('خطا در حذف تسک');
+                showErrorToast('خطا در حذف تسک');
             }
         }
     };
@@ -132,9 +121,9 @@ export default function TasksPage() {
     const handleToggleDone = async (taskId: number, done: boolean) => {
         try {
             await toggleTaskDone(taskId, done);
-            showSuccessAlert(`وضعیت تسک به ${done ? 'انجام شده' : 'در حال انجام'} تغییر کرد`);
+            showSuccessToast(`وضعیت تسک به ${done ? 'انجام شده' : 'در حال انجام'} تغییر کرد`);
         } catch (error) {
-            showErrorAlert('خطا در تغییر وضعیت تسک');
+            showErrorToast('خطا در تغییر وضعیت تسک');
         }
     };
 
@@ -144,13 +133,10 @@ export default function TasksPage() {
     };
 
     const handleSaveTask = (taskData: Partial<MainTask>) => {
-        if (selectedTask) {
-            return handleUpdateTask(taskData);
-        } else {
-            return handleCreateTask(taskData);
-        }
+        return selectedTask ? handleUpdateTask(taskData) : handleCreateTask(taskData);
     };
 
+    // توابع مدیریت ساب‌تسک
     const handleAddSubTask = (taskId: number) => {
         setEditingSubTask(undefined);
         setSelectedTaskId(taskId);
@@ -163,83 +149,44 @@ export default function TasksPage() {
         setSubTaskModalOpen(true);
     };
 
-    const handleCreateSubTask = async (subTaskData: CreateSubTaskData) => {
-        if (!selectedTaskId) return;
-        
+    const handleSaveSubTask = async (subTaskData: CreateSubTaskData) => {
         setSaveLoading(true);
         try {
-            const response = await fetch(
-                `http://localhost:8080/api/main-tasks/${selectedTaskId}/subtasks`,
-                {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(subTaskData),
-                }
-            );
+            const url = editingSubTask
+                ? `http://localhost:8080/api/subtasks/${editingSubTask.id}`
+                : `http://localhost:8080/api/main-tasks/${selectedTaskId}/subtasks`;
+            
+            const method = editingSubTask ? "PUT" : "POST";
+            const body = editingSubTask 
+                ? { ...subTaskData }
+                : { ...subTaskData, main_task_id: selectedTaskId };
+
+            const response = await fetch(url, {
+                method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body)
+            });
 
             if (!response.ok) {
-                throw new Error(`خطا در ایجاد ساب‌تسک: ${response.status}`);
+                throw new Error(`خطا در ${editingSubTask ? 'ویرایش' : 'ایجاد'} ساب‌تسک: ${response.status}`);
             }
 
             await response.json();
-            setSubTaskModalOpen(false);
-            setSelectedTaskId(null);
+            
             refetchTasks();
-            showSuccessAlert('زیرکار جدید با موفقیت ایجاد شد');
+            showSuccessToast(`زیرکار ${editingSubTask ? 'با موفقیت ویرایش شد' : 'جدید با موفقیت ایجاد شد'}`);
+            handleCloseSubTaskModal(); // استفاده از تابعی که قبلاً تعریف شده
         } catch (error) {
-            showErrorAlert('خطا در ایجاد زیرکار');
+            showErrorToast(`خطا در ${editingSubTask ? 'ویرایش' : 'ایجاد'} زیرکار`);
         } finally {
             setSaveLoading(false);
-        }
-    };
-
-    const handleUpdateSubTask = async (subTaskData: CreateSubTaskData) => {
-        if (!editingSubTask) return;
-        
-        setSaveLoading(true);
-        try {
-            const response = await fetch(
-                `http://localhost:8080/api/subtasks/${editingSubTask.id}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify(subTaskData),
-                }
-            );
-
-            if (!response.ok) {
-                throw new Error(`خطا در ویرایش ساب‌تسک: ${response.status}`);
-            }
-
-            await response.json();
-            setSubTaskModalOpen(false);
-            setEditingSubTask(undefined);
-            setSelectedTaskId(null);
-            refetchTasks();
-            showSuccessAlert('زیرکار با موفقیت ویرایش شد');
-        } catch (error) {
-            showErrorAlert('خطا در ویرایش زیرکار');
-        } finally {
-            setSaveLoading(false);
-        }
-    };
-
-    const handleSaveSubTask = (subTaskData: CreateSubTaskData) => {
-        if (editingSubTask) {
-            return handleUpdateSubTask(subTaskData);
-        } else {
-            return handleCreateSubTask(subTaskData);
         }
     };
 
     const handleDeleteSubTask = async (subTaskId: number) => {
-        const result = await showConfirmDialog('آیا از حذف این زیرکار اطمینان دارید؟', 'بله، حذف شود');
+        const confirmed = window.confirm('آیا از حذف این زیرکار اطمینان دارید؟');
         
-        if (result.isConfirmed) {
+        if (confirmed) {
             try {
                 const response = await fetch(`http://localhost:8080/api/subtasks/${subTaskId}`, {
                     method: "DELETE",
@@ -250,9 +197,9 @@ export default function TasksPage() {
                 }
 
                 refetchTasks();
-                showSuccessAlert('زیرکار با موفقیت حذف شد');
+                showSuccessToast('زیرکار با موفقیت حذف شد');
             } catch (error) {
-                showErrorAlert('خطا در حذف زیرکار');
+                showErrorToast('خطا در حذف زیرکار');
             }
         }
     };
@@ -261,9 +208,7 @@ export default function TasksPage() {
         try {
             const response = await fetch(`http://localhost:8080/api/subtasks/${subTaskId}`, {
                 method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ done }),
             });
 
@@ -273,14 +218,28 @@ export default function TasksPage() {
 
             await response.json();
             refetchTasks();
-            showSuccessAlert(`وضعیت زیرکار به ${done ? 'انجام شده' : 'در حال انجام'} تغییر کرد`);
+            showSuccessToast(`وضعیت زیرکار به ${done ? 'انجام شده' : 'در حال انجام'} تغییر کرد`);
         } catch (error) {
-            showErrorAlert('خطا در تغییر وضعیت زیرکار');
+            showErrorToast('خطا در تغییر وضعیت زیرکار');
         }
     };
 
     return (
         <Box>
+            {/* کامپوننت ToastContainer برای نمایش toastها */}
+            <ToastContainer
+                position="top-left"
+                autoClose={3000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={true}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+            />
+
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4" sx={{ fontWeight: 600 }}>
                     مدیریت تسک‌ها
@@ -308,7 +267,7 @@ export default function TasksPage() {
                     ) : (
                         <TaskTable
                             tasks={tasks}
-                            onEdit={handleEditTask} 
+                            onEdit={handleEditTask}
                             onDelete={handleDeleteTask}
                             onToggleDone={handleToggleDone}
                             onAddSubTask={handleAddSubTask}
@@ -330,11 +289,7 @@ export default function TasksPage() {
             
             <SubTaskModal
                 open={subTaskModalOpen}
-                onClose={() => {
-                    setSubTaskModalOpen(false);
-                    setEditingSubTask(undefined);
-                    setSelectedTaskId(null);
-                }}
+                onClose={handleCloseSubTaskModal}
                 onSave={handleSaveSubTask}
                 loading={saveLoading}
                 mainTaskId={selectedTaskId}

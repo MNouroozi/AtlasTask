@@ -38,21 +38,15 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
 
     const menuItems = [
         { 
-            text: 'داشبورد', 
-            icon: <DashboardIcon sx={{ fontSize: '1.3rem' }} />, 
-            path: '/', 
-            badge: null,
-        },
-        { 
             text: 'تسک‌ها', 
             icon: <TaskIcon sx={{ fontSize: '1.3rem' }} />, 
-            path: '/tasks', 
+            path: '/', 
             badge: pendingMainTasksCount,
         },
         { 
             text: 'گزارشات', 
             icon: <ListAlt sx={{ fontSize: '1.3rem' }} />, 
-             path: '/', 
+             path: '/reports', 
             // badge: allTasks.reduce((total, task) => total + (task.subtasks?.length || 0), 0),
         },
     ];
@@ -63,7 +57,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
 
     return (
         <>
-            {/* سایدبار اصلی (حالت باز) */}
             <Drawer
                 variant="persistent"
                 anchor="right"
@@ -89,7 +82,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                     },
                 }}
             >
-                {/* هدر سایدبار */}
                 <Box sx={{ 
                     p: 0.5, 
                     textAlign: 'center',
@@ -128,7 +120,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                     </Box>
                 </Box>
 
-                {/* منوی اصلی */}
                 <Box sx={{ p: 2, flex: 1 }}>
                     <List sx={{ pt: 0, gap: 0.5 }}>
                         {menuItems.map((item) => (
@@ -202,7 +193,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                         ))}
                     </List>
 
-                    {/* بخش آمار */}
                     <Box sx={{ 
                         mt: 0, 
                         p: 1.5, 
@@ -246,7 +236,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                     </Box>
                 </Box>
 
-                {/* فوتر */}
                 <Box sx={{ 
                     p: 2.5, 
                     borderTop: '1px solid #e2e8f0',
@@ -264,7 +253,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                 </Box>
             </Drawer>
 
-            {/* سایدبار کوچک (حالت بسته) */}
             <Drawer
                 variant="persistent"
                 anchor="right"
@@ -292,7 +280,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                     },
                 }}
             >
-                {/* آواتار کوچک */}
                 <Avatar
                     sx={{
                         width: 40,
@@ -307,7 +294,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                     <TrendingIcon sx={{ fontSize: '1.3rem' }} />
                 </Avatar>
 
-                {/* منوی آیتم‌ها */}
                 <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, gap: 1 }}>
                     {menuItems.map((item) => (
                         <Box
@@ -356,7 +342,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                     ))}
                 </Box>
 
-                {/* ورژن در حالت کوچک */}
                 <Box sx={{ mt: 'auto', mb: 2 }}>
                     <Typography 
                         variant="caption" 
@@ -373,7 +358,6 @@ export default function Sidebar({ open, onToggle }: SidebarProps) {
                 </Box>
             </Drawer>
 
-            {/* overlay برای موبایل */}
             {open && (
                 <Box
                     sx={{
