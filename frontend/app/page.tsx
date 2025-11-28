@@ -41,11 +41,12 @@ export default function TasksPage() {
     const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
     const [saveLoading, setSaveLoading] = useState(false);
     const [editingSubTask, setEditingSubTask] = useState<SubTask | undefined>();
+    const [expandedTaskId, setExpandedTaskId] = useState<number | null>(null);
 
-    // فیلتر کردن بر اساس URL parameters
     useEffect(() => {
         const filter = searchParams.get('filter');
         const done = searchParams.get('done');
+        const taskId = searchParams.get('taskId');
         
         if (filter === 'overdue') {
             setFilters(prev => ({ ...prev, search: '', done: 'pending' }));
@@ -55,6 +56,30 @@ export default function TasksPage() {
             setFilters(prev => ({ ...prev, done: 'done' }));
         } else if (done === 'pending') {
             setFilters(prev => ({ ...prev, done: 'pending' }));
+        } else {
+            setFilters(prev => ({ ...prev, search: '', done: '' }));
+        }
+
+        if (taskId) {
+            const id = parseInt(taskId);
+            setExpandedTaskId(id);
+            
+            setTimeout(() => {
+                const element = document.getElementById(`task-${id}`);
+                if (element) {
+                    element.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'center' 
+                    });
+                    
+                    element.style.transition = 'all 0.5s ease';
+                    element.style.backgroundColor = '#fff3cd';
+                    
+                    setTimeout(() => {
+                        element.style.backgroundColor = '';
+                    }, 2000);
+                }
+            }, 500);
         }
     }, [searchParams, setFilters]);
 
@@ -242,7 +267,6 @@ export default function TasksPage() {
         }
     };
 
-    // فیلتر کردن تسک‌ها بر اساس URL parameters
     const filteredTasks = useMemo(() => {
         const filter = searchParams.get('filter');
         const done = searchParams.get('done');
@@ -316,6 +340,7 @@ export default function TasksPage() {
                             onEditSubTask={handleEditSubTask}
                             onDeleteSubTask={handleDeleteSubTask}
                             onToggleSubTaskDone={handleToggleSubTaskDone}
+                            expandedTaskId={expandedTaskId}
                         />
                     )}
                 </CardContent>

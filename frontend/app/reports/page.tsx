@@ -95,8 +95,11 @@ export default function ReportsPage() {
         setSelectedCategory('');
     };
 
-    const handleTaskClick = (taskId: number) => {
-        router.push('/');
+    const handleTaskClick = (task: any) => {
+        const params = new URLSearchParams();
+        params.set('taskId', task.id.toString());
+        params.set('done', task.done ? 'done' : 'pending');
+        router.push(`/?${params.toString()}`);
     };
 
     const handleViewInTasks = (filterType: ViewMode) => {
@@ -144,10 +147,10 @@ export default function ReportsPage() {
                 border: `1px solid ${alpha(color, 0.2)}`,
                 borderRadius: 3,
                 transition: 'all 0.3s ease',
-                cursor: onClick ? 'pointer' : 'default',
+                cursor: 'pointer',
                 '&:hover': {
-                    transform: onClick ? 'translateY(-4px)' : 'none',
-                    boxShadow: onClick ? `0 8px 25px ${alpha(color, 0.15)}` : 'none',
+                    transform: 'translateY(-4px)',
+                    boxShadow: `0 8px 25px ${alpha(color, 0.15)}`,
                 }
             }}
             onClick={onClick}
@@ -215,7 +218,7 @@ export default function ReportsPage() {
                         backgroundColor: alpha(theme.palette.primary.main, 0.04),
                     }
                 }}
-                onClick={() => handleTaskClick(task.id)}
+                onClick={() => handleTaskClick(task)}
             >
                 <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', mb: 1 }}>
                     <ListItemIcon sx={{ minWidth: 36, mr: 1 }}>
