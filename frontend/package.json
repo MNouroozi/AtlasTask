@@ -25,7 +25,8 @@
         "react-datepicker-jalali": "^0.0.4",
         "react-dom": "^18.0.0",
         "react-multi-date-picker": "^4.5.2",
-        "react-toastify": "^11.0.5"
+        "react-toastify": "^11.0.5",
+        "sweetalert2": "^11.26.3"
     },
     "devDependencies": {
         "@types/node": "^20",

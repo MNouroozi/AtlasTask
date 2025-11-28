@@ -16,6 +16,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
 import {
   KeyboardArrowDown as ExpandIcon,
@@ -29,6 +31,7 @@ import {
   AccessTime as TimeIcon,
   Task as TaskIcon,
   PlaylistAddCheck as SubtaskIcon,
+  Description as DescriptionIcon,
 } from '@mui/icons-material';
 import { convertToJalali } from '@/lib/dateConverter';
 import { SubTask } from '@/app/types';
@@ -39,7 +42,7 @@ interface SubTasksPanelProps {
   isOpen: boolean;
   onToggle: () => void;
   onAddSubTask: (taskId: number) => void;
-  onEditSubTask?: (subTask: SubTask) => void;
+  onEditSubTask: (subTask: SubTask) => void;
   onDeleteSubTask: (subTaskId: number) => void;
   onToggleSubTaskDone: (subTaskId: number, done: boolean) => void;
 }
@@ -55,6 +58,9 @@ export default function SubTasksPanel({
   onToggleSubTaskDone,
 }: SubTasksPanelProps) {
   const [confirmDialog, setConfirmDialog] = useState<number | null>(null);
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
 
   const safeSubTasks = subTasks || [];
   const hasSubTasks = safeSubTasks.length > 0;
@@ -68,6 +74,16 @@ export default function SubTasksPanel({
     }
   };
 
+    const handleEditClick = (subTask: SubTask, e: React.MouseEvent) => {
+      e.stopPropagation();
+      
+      if (onEditSubTask) {
+        onEditSubTask(subTask);
+      } else {
+        
+      }
+    };
+
   return (
     <>
       <Box
@@ -75,11 +91,13 @@ export default function SubTasksPanel({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
-          p: 2,
+          p: { xs: 1.5, sm: 2 },
           backgroundColor: 'grey.50',
           borderTop: '1px solid',
           borderColor: 'divider',
+          cursor: 'pointer',
         }}
+        onClick={onToggle}
       >
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
           <IconButton
@@ -109,21 +127,21 @@ export default function SubTasksPanel({
         </Box>
 
         <Button
-          size="small"
+          size={isMobile ? "small" : "medium"}
           startIcon={<AddIcon />}
           onClick={(e) => {
             e.stopPropagation();
             onAddSubTask(taskId);
           }}
           variant="outlined"
-          sx={{ borderRadius: 2 }}
+          sx={{ borderRadius: 2, minWidth: 'auto' }}
         >
-          زیرکار جدید
+          {isMobile ? '' : 'زیرکار جدید'}
         </Button>
       </Box>
 
       <Collapse in={isOpen} timeout="auto">
-        <Box sx={{ p: 2, backgroundColor: 'grey.50' }}>
+        <Box sx={{ p: { xs: 1, sm: 2 }, backgroundColor: 'grey.50' }}>
           {!hasSubTasks ? (
             <Box sx={{ textAlign: 'center', py: 4 }}>
               <TaskIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
@@ -134,7 +152,7 @@ export default function SubTasksPanel({
           ) : (
             <Grid container spacing={2}>
               {safeSubTasks.map((subTask) => (
-                <Grid item xs={12} sm={6} md={4} lg={3} key={subTask.id}>
+                <Grid item xs={12} sm={6} md={4} key={subTask.id}>
                   <Card
                     variant="outlined"
                     sx={{
@@ -152,7 +170,7 @@ export default function SubTasksPanel({
                     <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                       <Box sx={{
                         display: 'flex',
-                        alignItems: 'flex-start',
+                        flexDirection: 'column',
                         gap: 1,
                         mb: 2,
                         p: 1.5,
@@ -161,23 +179,41 @@ export default function SubTasksPanel({
                         borderColor: 'divider',
                         backgroundColor: 'grey.50'
                       }}>
-                        <TaskIcon
-                          fontSize="small"
-                          color={subTask.done ? "success" : "primary"}
-                          sx={{ mt: 0.2 }}
-                        />
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: 500,
-                            textDecoration: subTask.done ? 'line-through' : 'none',
-                            color: subTask.done ? 'text.secondary' : 'text.primary',
-                            flex: 1,
-                            lineHeight: 1.4,
-                          }}
-                        >
-                          {subTask.title}
-                        </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                          <TaskIcon
+                            fontSize="small"
+                            color={subTask.done ? "success" : "primary"}
+                            sx={{ mt: 0.2 }}
+                          />
+                          <Typography
+                            variant="body2"
+                            sx={{
+                              fontWeight: 600,
+                              textDecoration: subTask.done ? 'line-through' : 'none',
+                              color: subTask.done ? 'text.secondary' : 'text.primary',
+                              flex: 1,
+                              lineHeight: 1.4,
+                            }}
+                          >
+                            {subTask.title}
+                          </Typography>
+                        </Box>
+                        
+                        {subTask.description && (
+                          <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1 }}>
+                            <DescriptionIcon fontSize="small" color="action" sx={{ mt: 0.2 }} />
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{
+                                lineHeight: 1.4,
+                                flex: 1,
+                              }}
+                            >
+                              {subTask.description}
+                            </Typography>
+                          </Box>
+                        )}
                       </Box>
 
                       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, mb: 2 }}>
@@ -203,7 +239,7 @@ export default function SubTasksPanel({
                         borderColor: 'divider',
                         pt: 1.5
                       }}>
-                        <Tooltip title={subTask.done ? 'انجام شده - کلیک برای تغییر' : 'در حال انجام - کلیک برای تغییر'} disableInteractive>
+                        <Tooltip title={subTask.done ? 'انجام شده - کلیک برای تغییر' : 'در حال انجام - کلیک برای تغییر'}>
                           <Chip
                             icon={subTask.done ?
                               <DoneIcon fontSize="small" /> :
@@ -226,14 +262,10 @@ export default function SubTasksPanel({
                         </Tooltip>
 
                         <Box sx={{ display: 'flex', gap: 0.5 }}>
-                          <Tooltip title="ویرایش زیرکار" disableInteractive>
+                          <Tooltip title="ویرایش زیرکار">
                             <IconButton
                               size="small"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                console.log('SubTasksPanel: edit click', { subTaskId: subTask.id, subTask });
-                                onEditSubTask?.({ id: subTask.id } as any);      
-                              }}
+                              onClick={(e) => handleEditClick(subTask, e)}
                               color="primary"
                               sx={{
                                 backgroundColor: 'primary.50',
@@ -248,7 +280,7 @@ export default function SubTasksPanel({
                             </IconButton>
                           </Tooltip>
 
-                          <Tooltip title="حذف زیرکار" disableInteractive>
+                          <Tooltip title="حذف زیرکار">
                             <IconButton
                               size="small"
                               onClick={(e) => {
@@ -279,7 +311,12 @@ export default function SubTasksPanel({
         </Box>
       </Collapse>
 
-      <Dialog open={!!confirmDialog} onClose={() => setConfirmDialog(null)} maxWidth="xs" fullWidth>
+      <Dialog 
+        open={!!confirmDialog} 
+        onClose={() => setConfirmDialog(null)} 
+        maxWidth="xs" 
+        fullWidth
+      >
         <DialogTitle sx={{ pb: 1, display: 'flex', alignItems: 'center', gap: 1 }}>
           <DeleteIcon color="error" />
           حذف زیرکار

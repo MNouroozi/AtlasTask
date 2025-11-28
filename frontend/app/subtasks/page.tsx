@@ -5,22 +5,16 @@ import {
     Box,
     Typography,
     Button,
-    Card,
-    CardContent,
 } from '@mui/material';
 import { Add as AddIcon } from '@mui/icons-material';
 import { useTasks } from '@/app/hooks/useTasks';
 import TaskTable from '@/components/tasks/TaskTable';
-import TaskFilters from '@/components/tasks/TaskFilters';
-import TaskModal from '@/components/tasks/TaskModal';
 import SubTaskModal from '@/components/subTasks/SubTaskModal';
-import LoadingSpinner from '@/components/ui/LoadingSpinner';
-import { MainTask, CreateSubTaskData, SubTask } from '@/app/types';
+import { CreateSubTaskData, SubTask } from '@/app/types';
 
 export default function SubtasksPage() {
     const { tasks, loading, filters, setFilters, refetch: refetchTasks } = useTasks();
 
-    const [taskModalOpen, setTaskModalOpen] = useState(false);
     const [subTaskModalOpen, setSubTaskModalOpen] = useState(false);
     const [selectedTaskId, setSelectedTaskId] = useState<number | undefined>(undefined);
     const [editingSubTask, setEditingSubTask] = useState<SubTask | undefined>(undefined);
@@ -41,10 +35,17 @@ export default function SubtasksPage() {
     const handleSaveSubTask = async (data: CreateSubTaskData) => {
         setSaveLoading(true);
         try {
-            const requestBody = editingSubTask ? { ...data } : { ...data, main_task_id: selectedTaskId };
+            if (!selectedTaskId) throw new Error('شناسه تسک اصلی مشخص نیست');
+
+            const requestBody = {
+                ...data,
+                main_task_id: selectedTaskId,
+            };
+
             const url = editingSubTask
                 ? `http://localhost:8080/api/subtasks/${editingSubTask.id}`
                 : `http://localhost:8080/api/main-tasks/${selectedTaskId}/subtasks`;
+
             const method = editingSubTask ? "PUT" : "POST";
 
             const response = await fetch(url, {
@@ -57,12 +58,12 @@ export default function SubtasksPage() {
 
             await response.json();
             refetchTasks();
+
             setSubTaskModalOpen(false);
             setEditingSubTask(undefined);
             setSelectedTaskId(undefined);
         } catch (error) {
-            console.error(error);
-            alert('خطا در ذخیره زیرکار');
+            
         } finally {
             setSaveLoading(false);
         }
@@ -75,21 +76,26 @@ export default function SubtasksPage() {
                     مدیریت ساب تسک‌ها
                 </Typography>
 
-                <Button variant="contained" startIcon={<AddIcon />} sx={{ borderRadius: 2 }} disabled>
+                <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    sx={{ borderRadius: 2 }}
+                    onClick={() => handleAddSubTask(tasks[0]?.id || 0)}
+                >
                     ایجاد ساب تسک جدید
                 </Button>
             </Box>
 
-            <Card>
-                <CardContent sx={{ textAlign: 'center', py: 6 }}>
-                    <Typography variant="h6" color="text.secondary" gutterBottom>
-                        🚧 در حال توسعه
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        بخش مدیریت ساب تسک‌ها به زودی راه‌اندازی خواهد شد
-                    </Typography>
-                </CardContent>
-            </Card>
+            <TaskTable
+                tasks={tasks}
+                onEdit={() => {}}
+                onDelete={() => {}}
+                onToggleDone={() => {}}
+                onAddSubTask={handleAddSubTask}
+                onEditSubTask={handleEditSubTask}
+                onDeleteSubTask={() => {}}
+                onToggleSubTaskDone={() => {}}
+            />
 
             <SubTaskModal
                 open={subTaskModalOpen}
@@ -103,7 +109,6 @@ export default function SubtasksPage() {
                 mainTaskId={selectedTaskId}
                 subTask={editingSubTask}
             />
-
         </Box>
     );
 }

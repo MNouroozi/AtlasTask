@@ -16,7 +16,7 @@ export const convertToJalali = (gregorianDate: string | null): string => {
         
         return `${jalaali.jy}/${String(jalaali.jm).padStart(2, '0')}/${String(jalaali.jd).padStart(2, '0')}`;
     } catch (error) {
-        console.error('Error converting to Jalali:', error);
+        
         return '-';
     }
 };
@@ -34,7 +34,7 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
                 jMonth = dateObj.month;
                 jDay = dateObj.day;
             } else {
-                console.error('Invalid date object:', dateObj);
+                
                 return null;
             }
         }
@@ -46,7 +46,7 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
                 jMonth = firstDate.month;
                 jDay = firstDate.day;
             } else {
-                console.error('Invalid date array:', jalaaliDate);
+                
                 return null;
             }
         }
@@ -54,7 +54,7 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
             const parts = jalaaliDate.split('/');
             
             if (parts.length !== 3) {
-                console.error('Invalid date format:', jalaaliDate);
+                
                 return null;
             }
             
@@ -63,16 +63,16 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
             jDay = parseInt(parts[2]);
             
             if (isNaN(jYear) || isNaN(jMonth) || isNaN(jDay)) {
-                console.error('Invalid date numbers:', jalaaliDate);
+                
                 return null;
             }
         }
         else if (typeof jalaaliDate === 'number') {
-            console.error('Date as number is not supported:', jalaaliDate);
+            
             return null;
         }
         else {
-            console.error('Unsupported date type:', typeof jalaaliDate, jalaaliDate);
+            
             return null;
         }
 
@@ -85,13 +85,13 @@ export const convertToGregorian = (jalaaliDate: Value): string | null => {
         );
 
         if (isNaN(gregorianDate.getTime())) {
-            console.error('Invalid converted date:', { jYear, jMonth, jDay, gregorian });
+            
             return null;
         }
 
         return gregorianDate.toISOString();
     } catch (error) {
-        console.error('Error converting to Gregorian:', error);
+        
         return null;
     }
 };
@@ -111,7 +111,7 @@ export const formatDateForPicker = (gregorianDate: string | null): string => {
         
         return `${jalaali.jy}/${String(jalaali.jm).padStart(2, '0')}/${String(jalaali.jd).padStart(2, '0')}`;
     } catch (error) {
-        console.error('Error formatting date for picker:', error);
+        
         return '';
     }
 };

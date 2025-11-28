@@ -208,3 +208,5 @@ backend/tmp/main
 .vs/AtlasTask.slnx/FileContentIndex/08e886d4-a345-4c13-afab-4470c819385e.vsidx
 .vs/AtlasTask.slnx/v18/.wsuo
 .vs/AtlasTask.slnx/v18/DocumentLayout.json
+frontend/yarn.lock
+frontend/frontend.txt

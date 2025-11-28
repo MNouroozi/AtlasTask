@@ -175,14 +175,14 @@ export default function TaskModal({
                 taskData.id = task.id;
             }
             
-            console.log('Sending task data:', taskData);
+            
             
             await onSave(taskData);
             
             toast.success(task ? 'تسک با موفقیت ویرایش شد' : 'تسک جدید ایجاد شد');
             onClose();
         } catch (error) {
-            console.error('Error saving task:', error);
+            
             toast.error('خطا در ذخیره تسک');
         }
     };

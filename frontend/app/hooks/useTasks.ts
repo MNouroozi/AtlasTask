@@ -19,9 +19,9 @@ export function useTasks() {
         done: "",
     });
 
-    useEffect(() => {
-        fetchTasks();
-        fetchPendingTasks();
+    // تابع برای محاسبه pendingCount از allTasks
+    const calculatePendingCount = useCallback((tasks: MainTask[]) => {
+        return tasks.filter(task => !task.done).length;
     }, []);
 
     const fetchTasks = async () => {
@@ -35,36 +35,21 @@ export function useTasks() {
             
             const data = await response.json();
             setAllTasks(data);
+            // محاسبه pendingCount از داده‌های دریافت شده
+            setPendingCount(calculatePendingCount(data));
         } catch (error) {
-            console.error("Error fetching tasks:", error);
+            console.error('Error fetching tasks:', error);
         } finally {
             setLoading(false);
         }
     };
 
-    const fetchPendingTasks = async () => {
-        try {
-            setPendingLoading(true);
-            const response = await fetch("http://localhost:8080/api/main-tasks/pending");
-            
-            if (!response.ok) {
-                throw new Error(`خطا در دریافت تسک‌های در انتظار: ${response.status}`);
-            }
-            
-            const data = await response.json();
-            setPendingTasks(data.tasks || []);
-            setPendingCount(data.pending_count || 0);
-        } catch (error) {
-            console.error("Error fetching pending tasks:", error);
-        } finally {
-            setPendingLoading(false);
-        }
-    };
+    useEffect(() => {
+        fetchTasks();
+    }, []);
 
     const updateTask = useCallback(async (id: number, updates: Partial<MainTask>) => {
         try {
-            console.log("🔄 Updating task:", id, updates);
-            
             const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
                 method: "PUT",
                 headers: {
@@ -79,62 +64,58 @@ export function useTasks() {
             }
 
             const updatedTask = await response.json();
-            console.log("✅ Updated task received:", updatedTask);
 
-            // آپدیت allTasks
+            // فقط یک بار setAllTasks فراخوانی شود
             setAllTasks(prevTasks => {
                 const newTasks = prevTasks.map(task => 
                     task.id === id ? updatedTask : task
                 );
-                console.log("📝 New allTasks:", newTasks);
+                // محاسبه pendingCount جدید
+                const newPendingCount = calculatePendingCount(newTasks);
+                setPendingCount(newPendingCount);
                 return newTasks;
-            });
-
-            // آپدیت pending tasks
-            setPendingTasks(prevPending => {
-                if (updatedTask.done) {
-                    const newPending = prevPending.filter(task => task.id !== id);
-                    console.log("❌ Removed from pending:", newPending);
-                    return newPending;
-                } else {
-                    const existingIndex = prevPending.findIndex(task => task.id === id);
-                    if (existingIndex >= 0) {
-                        const newPending = [...prevPending];
-                        newPending[existingIndex] = updatedTask;
-                        console.log("✏️ Updated in pending:", newPending);
-                        return newPending;
-                    } else {
-                        const newPending = [updatedTask, ...prevPending];
-                        console.log("➕ Added to pending:", newPending);
-                        return newPending;
-                    }
-                }
-            });
-
-            // آپدیت pending count
-            setPendingCount(prevCount => {
-                const currentTask = allTasks.find(task => task.id === id);
-                let newCount = prevCount;
-                
-                if (currentTask && currentTask.done !== updatedTask.done) {
-                    newCount = updatedTask.done ? Math.max(0, prevCount - 1) : prevCount + 1;
-                    console.log("🔢 New pending count:", newCount);
-                }
-                
-                return newCount;
             });
 
             return updatedTask;
         } catch (error) {
-            console.error("❌ Error updating task:", error);
+            console.error('Error updating task:', error);
             throw error;
         }
-    }, [allTasks]);
+    }, [calculatePendingCount]);
 
     const toggleTaskDone = useCallback(async (id: number, done: boolean) => {
-        console.log("🎯 Toggle task:", id, "to:", done);
-        return updateTask(id, { done });
-    }, [updateTask]);
+        try {
+            const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ done }),
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`خطا در تغییر وضعیت تسک: ${response.status} - ${errorText}`);
+            }
+
+            const updatedTask = await response.json();
+
+            // به‌روزرسانی state
+            setAllTasks(prevTasks => {
+                const newTasks = prevTasks.map(task => 
+                    task.id === id ? updatedTask : task
+                );
+                const newPendingCount = calculatePendingCount(newTasks);
+                setPendingCount(newPendingCount);
+                return newTasks;
+            });
+
+            return updatedTask;
+        } catch (error) {
+            console.error('Error toggling task done:', error);
+            throw error;
+        }
+    }, [calculatePendingCount]);
 
     const createTask = useCallback(async (taskData: Partial<MainTask>) => {
         try {
@@ -153,25 +134,23 @@ export function useTasks() {
 
             const newTask = await response.json();
             
-            setAllTasks(prev => [newTask, ...prev]);
-            
-            if (!newTask.done) {
-                setPendingTasks(prev => [newTask, ...prev]);
-                setPendingCount(prev => prev + 1);
-            }
+            // به‌روزرسانی allTasks و pendingCount
+            setAllTasks(prev => {
+                const newTasks = [newTask, ...prev];
+                const newPendingCount = calculatePendingCount(newTasks);
+                setPendingCount(newPendingCount);
+                return newTasks;
+            });
             
             return newTask;
         } catch (error) {
-            console.error("Error creating task:", error);
+            console.error('Error creating task:', error);
             throw error;
         }
-    }, []);
+    }, [calculatePendingCount]);
 
     const deleteTask = useCallback(async (id: number) => {
         try {
-            const taskToDelete = allTasks.find(task => task.id === id);
-            const wasPending = taskToDelete && !taskToDelete.done;
-
             const response = await fetch(`http://localhost:8080/api/main-tasks/${id}`, {
                 method: "DELETE",
             });
@@ -180,18 +159,19 @@ export function useTasks() {
                 throw new Error(`خطا در حذف تسک: ${response.status}`);
             }
 
-            setAllTasks(prev => prev.filter(task => task.id !== id));
-            
-            if (wasPending) {
-                setPendingTasks(prev => prev.filter(task => task.id !== id));
-                setPendingCount(prev => Math.max(0, prev - 1));
-            }
+            // به‌روزرسانی allTasks و pendingCount
+            setAllTasks(prev => {
+                const newTasks = prev.filter(task => task.id !== id);
+                const newPendingCount = calculatePendingCount(newTasks);
+                setPendingCount(newPendingCount);
+                return newTasks;
+            });
         
         } catch (error) {
-            console.error("Error deleting task:", error);
+            console.error('Error deleting task:', error);
             throw error;
         }
-    }, [allTasks]);
+    }, [calculatePendingCount]);
 
     const filteredTasks = allTasks.filter((task) => {
         const matchesSearch = !filters.search ||
@@ -206,8 +186,8 @@ export function useTasks() {
     });
 
     return {
-        tasks: filteredTasks,    // تسک‌های فیلتر شده برای جدول
-        allTasks: allTasks,      // همه تسک‌ها برای سایدبار
+        tasks: filteredTasks,    
+        allTasks: allTasks,      
         pendingTasks,
         pendingCount,
         loading,
@@ -219,6 +199,5 @@ export function useTasks() {
         deleteTask,
         toggleTaskDone,
         refetch: fetchTasks,
-        refetchPending: fetchPendingTasks,
     };
 }

@@ -20,6 +20,7 @@ export interface SubTask {
   id: number;
   main_task_id: number;
   title: string;
+  description :string;
   done: boolean;
   startSubtask: string;
   finishSubtask: string;
@@ -29,6 +30,7 @@ export interface SubTask {
 
 export interface CreateSubTaskData {
   title: string;
+  description? :string;
   done?: boolean;
   startSubtask: string;
   finishSubtask: string;

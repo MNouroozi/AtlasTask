@@ -33,7 +33,6 @@ export function useSubTasks(mainTaskId?: number) {
       const data = await response.json();
       setSubTasks(data);
     } catch (error) {
-      console.error("Error fetching subtasks:", error);
     } finally {
       setLoading(false);
     }
@@ -66,7 +65,6 @@ export function useSubTasks(mainTaskId?: number) {
 
       return newSubTask;
     } catch (error) {
-      console.error("Error creating subtask:", error);
       throw error;
     }
   };
@@ -93,7 +91,6 @@ export function useSubTasks(mainTaskId?: number) {
 
       return updatedSubTask;
     } catch (error) {
-      console.error("Error updating subtask:", error);
       throw error;
     }
   };
@@ -110,7 +107,6 @@ export function useSubTasks(mainTaskId?: number) {
 
       setSubTasks((prev) => prev.filter((task) => task.id !== id));
     } catch (error) {
-      console.error("Error deleting subtask:", error);
       throw error;
     }
   };
@@ -136,7 +132,6 @@ export function useSubTasks(mainTaskId?: number) {
 
       return updatedSubTask;
     } catch (error) {
-      console.error("Error toggling subtask:", error);
       throw error;
     }
   };

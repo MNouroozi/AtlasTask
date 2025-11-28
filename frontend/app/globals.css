@@ -17,3 +17,35 @@ a {
     text-decoration: none;
 }
 
+
+.swal2-popup {
+    font-family: var(--font-iran-sans) !important;
+    border-radius: 12px !important;
+}
+
+.swal2-title {
+    font-size: 1.25rem !important;
+    font-weight: 600 !important;
+}
+
+.swal2-confirm {
+    border-radius: 8px !important;
+    padding: 8px 20px !important;
+    font-weight: 500 !important;
+}
+
+.swal2-cancel {
+    border-radius: 8px !important;
+    padding: 8px 20px !important;
+    font-weight: 500 !important;
+}
+
+.Toastify__toast {
+    border-radius: 8px !important;
+    font-family: var(--font-iran-sans) !important;
+    min-height: 60px !important;
+}
+
+.Toastify__toast-body {
+    font-weight: 500 !important;
+}

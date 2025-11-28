@@ -36,7 +36,7 @@ import { SubTask, CreateSubTaskData } from '@/app/types';
 interface SubTaskModalProps {
     open: boolean;
     onClose: () => void;
-    subTask?: SubTask;
+    subTask?: SubTask | null;
     onSave: (subTaskData: CreateSubTaskData) => Promise<void>;
     loading?: boolean;
     primaryColor?: string;
@@ -60,14 +60,15 @@ export default function SubTaskModal({
     const [selectedFinishDate, setSelectedFinishDate] = useState<Value>(null);
     const [formData, setFormData] = useState({
         title: '',
+        description: '',
         done: false,
     });
 
     useEffect(() => {
-          console.log('SubTaskModal useEffect — open:', open, 'subTask:', subTask);
         if (subTask) {
             setFormData({
                 title: subTask.title || '',
+                description: subTask.description || '',
                 done: subTask.done || false,
             });
             setSelectedStartDate(subTask.startSubtask ? formatDateForPicker(subTask.startSubtask) : null);
@@ -75,6 +76,7 @@ export default function SubTaskModal({
         } else {
             setFormData({
                 title: '',
+                description: '',
                 done: false,
             });
             setSelectedStartDate(null);
@@ -173,17 +175,16 @@ export default function SubTaskModal({
             }
 
             const subTaskData: CreateSubTaskData = {
-                ...formData,
+                title: formData.title,
+                description: formData.description,
+                done: formData.done,
                 startSubtask: startDate,
                 finishSubtask: finishDate,
             };
             
             await onSave(subTaskData);
-            
-            toast.success(subTask ? 'ساب‌تسک با موفقیت ویرایش شد' : 'ساب‌تسک جدید ایجاد شد');
             onClose();
         } catch (error) {
-            console.error('Error saving subtask:', error);
             toast.error('خطا در ذخیره ساب‌تسک');
         }
     };
@@ -281,30 +282,49 @@ export default function SubTaskModal({
 
             <DialogContent sx={{ p: 3, mt: 3.5 }}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Box>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1.5, display: 'flex', alignItems: 'center', gap: 1, color: textColor }}>
-                            <Box sx={{ 
-                                width: 24, 
-                                height: 24, 
-                                borderRadius: 1,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                ...dynamicStyles.iconBox
-                            }}>
-                                <TitleIcon sx={{ fontSize: 16 }} />
-                            </Box>
-                            عنوان ساب‌تسک *
+                    <Paper elevation={0} sx={{ 
+                        p: 2.5, 
+                        borderRadius: 2, 
+                        border: `1px solid ${modalConfig.borderColor}`, 
+                        backgroundColor: `${modalConfig.buttonColor}03` 
+                    }}>
+                        <Typography variant="subtitle2" sx={{ ...dynamicStyles.sectionTitle, mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <TitleIcon sx={{ fontSize: 18, color: modalConfig.buttonColor }} />
+                            اطلاعات اصلی
                         </Typography>
-                        <TextField
-                            fullWidth
-                            size="small"
-                            value={formData.title}
-                            onChange={handleInputChange('title')}
-                            placeholder="عنوان ساب‌تسک را وارد کنید"
-                            sx={dynamicStyles.inputField}
-                        />
-                    </Box>
+                        
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: textColor, fontSize: '0.85rem' }}>
+                                    عنوان ساب‌تسک *
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    value={formData.title}
+                                    onChange={handleInputChange('title')}
+                                    placeholder="عنوان ساب‌تسک را وارد کنید"
+                                    sx={dynamicStyles.inputField}
+                                />
+                            </Box>
+
+                            <Box>
+                                <Typography variant="body2" sx={{ fontWeight: 600, mb: 1, color: textColor, fontSize: '0.85rem' }}>
+                                    توضیحات
+                                </Typography>
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    rows={3}
+                                    size="small"
+                                    value={formData.description}
+                                    onChange={handleInputChange('description')}
+                                    placeholder="توضیحات ساب‌تسک را وارد کنید (اختیاری)"
+                                    sx={dynamicStyles.inputField}
+                                />
+                            </Box>
+                        </Box>
+                    </Paper>
 
                     <Paper elevation={0} sx={{ 
                         p: 2.5, 
