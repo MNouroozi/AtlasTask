@@ -16,6 +16,7 @@ import {
     Clear as ClearIcon,
 } from '@mui/icons-material';
 import { TaskFilters as TaskFiltersType } from '@/app/hooks/useTasks';
+import { TaskStatus } from '@/app/types';
 
 interface TaskFiltersProps {
     filters: TaskFiltersType;
@@ -35,12 +36,12 @@ export default function TaskFilters({ filters, onFiltersChange }: TaskFiltersPro
     const clearFilters = () => {
         onFiltersChange({
             search: '',
-            status:'',
+            status: '',
             done: '',
         });
     };
 
-    const hasActiveFilters = filters.done;
+    const hasActiveFilters = filters.done || filters.status;
 
     return (
         <Card sx={{ mb: 3 }}>
@@ -76,7 +77,7 @@ export default function TaskFilters({ filters, onFiltersChange }: TaskFiltersPro
                     <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
                         <TextField
                             select
-                            label="وضعیت"
+                            label="وضعیت انجام"
                             value={filters.done}
                             onChange={(e) => handleFilterChange('done', e.target.value)}
                             size="small"
@@ -85,6 +86,20 @@ export default function TaskFilters({ filters, onFiltersChange }: TaskFiltersPro
                             <MenuItem value="">همه</MenuItem>
                             <MenuItem value="pending">در انتظار</MenuItem>
                             <MenuItem value="done">انجام شده</MenuItem>
+                        </TextField>
+
+                        <TextField
+                            select
+                            label="نوع وضعیت"
+                            value={filters.status}
+                            onChange={(e) => handleFilterChange('status', e.target.value)}
+                            size="small"
+                            sx={{ minWidth: 120 }}
+                        >
+                            <MenuItem value="">همه</MenuItem>
+                            <MenuItem value={TaskStatus.FollowUp}>پیگیری</MenuItem>
+                            <MenuItem value={TaskStatus.Action}>اقدام</MenuItem>
+                            <MenuItem value={TaskStatus.Reminder}>یادآوری</MenuItem>
                         </TextField>
                     </Box>
                 </Collapse>

@@ -468,7 +468,7 @@ export default function ReportsPage() {
     const renderOverview = () => (
         <Box>
             <Typography variant="h4" fontWeight="bold" gutterBottom sx={{ mb: 3, textAlign: 'right', fontSize: '1.5rem' }}>
-                📊 گزارشات جامع
+                 گزارشات جامع
             </Typography>
 
             <Grid container spacing={2}>
@@ -520,7 +520,7 @@ export default function ReportsPage() {
 
                 <Grid item xs={12} lg={6}>
                     <TaskListCard
-                        title="⏰ تسک‌های معوقه"
+                        title="تسک‌های معوقه"
                         tasks={stats.overdueTasks}
                         icon={<WarningIcon color="error" />}
                         color="#ef4444"
@@ -532,7 +532,7 @@ export default function ReportsPage() {
 
                 <Grid item xs={12} lg={6}>
                     <TaskListCard
-                        title="📅 تسک‌های امروز"
+                        title="تسک‌های امروز"
                         tasks={stats.todayTasks}
                         icon={<TodayIcon color="primary" />}
                         color="#3b82f6"
@@ -544,7 +544,7 @@ export default function ReportsPage() {
 
                 <Grid item xs={12} lg={6}>
                     <TaskListCard
-                        title="⏰ زیرکارهای معوقه"
+                        title="زیرکارهای معوقه"
                         tasks={stats.overdueSubtasks}
                         icon={<WarningIcon color="error" />}
                         color="#ef4444"
@@ -555,7 +555,7 @@ export default function ReportsPage() {
 
                 <Grid item xs={12} lg={6}>
                     <TaskListCard
-                        title="📅 زیرکارهای امروز"
+                        title="زیرکارهای امروز"
                         tasks={stats.todaySubtasks}
                         icon={<TodayIcon color="primary" />}
                         color="#3b82f6"

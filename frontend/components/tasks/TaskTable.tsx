@@ -16,6 +16,7 @@ import {
   Tooltip,
   Typography,
   IconButton,
+  TablePagination,
 } from '@mui/material';
 import {
   Title as TitleIcon,
@@ -102,6 +103,8 @@ export default function TaskTable({
   const [order, setOrder] = useState<Order>('asc');
   const [orderBy, setOrderBy] = useState<OrderBy>('title');
   const [expandedTask, setExpandedTask] = useState<number | null>(null);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   
   const handleRequestSort = (property: OrderBy) => {
     const isAsc = orderBy === property && order === 'asc';
@@ -115,6 +118,15 @@ export default function TaskTable({
 
   const isTaskExpanded = (taskId: number) => {
     return expandedTask === taskId;
+  };
+
+  const handleChangePage = (event: unknown, newPage: number) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   const sortedTasks = useMemo(() => {
@@ -140,249 +152,289 @@ export default function TaskTable({
     });
   }, [tasks, order, orderBy]);
 
-  const headers: { id: HeaderId; label: string; width: string; sortable?: boolean }[] = [
-    { id: 'title', label: 'عنوان تسک', width: '15%', sortable: true },
-    { id: 'letter_number', label: 'ش . نامه', width: '10%', sortable: true },
-    { id: 'letter_date', label: 'ت . نامه', width: '10%', sortable: true },
-    { id: 'description', label: 'توضیحات', width: '23%', sortable: true },
-    { id: 'due_date', label: 'ت . مهلت', width: '10%', sortable: true },
-    { id: 'status', label: 'وضعیت', width: '12%', sortable: true },
-    { id: 'actions', label: 'عملیات', width: '20%', sortable: false },
+  // محاسبه تسک‌های صفحه جاری
+  const paginatedTasks = useMemo(() => {
+    const startIndex = page * rowsPerPage;
+    const endIndex = startIndex + rowsPerPage;
+    return sortedTasks.slice(startIndex, endIndex);
+  }, [sortedTasks, page, rowsPerPage]);
+
+  const headers: { id: HeaderId; label: string; width?: string; sortable?: boolean }[] = [
+    { id: 'title', label: 'عنوان تسک', width: '20%', sortable: true },
+    { id: 'letter_number', label: 'ش . نامه', width: '12%', sortable: true },
+    { id: 'letter_date', label: 'ت . نامه', width: '12%', sortable: true },
+    { id: 'description', label: 'توضیحات', width: '24%', sortable: true },
+    { id: 'due_date', label: 'ت . مهلت', width: '12%', sortable: true },
+    { id: 'status', label: 'وضعیت', width: '10%', sortable: true },
+    { id: 'actions', label: 'عملیات', width: '10%', sortable: false },
   ];
 
   return (
-    <TableContainer 
-      component={Paper} 
-      sx={{ 
-        borderRadius: 2,
-        border: '1px solid',
-        borderColor: 'divider',
-        overflow: 'hidden',
-      }}
-    >
-      <Table sx={{ minWidth: 800 }}>
-        <TableHead>
-          <TableRow>
-            {headers.map((header) => (
-              <TableCell
-                key={String(header.id)}
-                align="center"
-                sx={{ 
-                  width: header.width,
-                  fontWeight: 600,
-                  backgroundColor: 'grey.50',
-                  fontSize: '0.875rem',
-                  py: 1,
-                  borderBottom: '2px solid',
-                  borderColor: 'primary.main',
-                }}
-              >
-                {header.sortable && header.id !== 'actions' ? (
-                  <TableSortLabel
-                    active={orderBy === header.id}
-                    direction={orderBy === header.id ? order : 'asc'}
-                    onClick={() => handleRequestSort(header.id as OrderBy)}
-                    sx={{
-                      '&:hover': {
-                        color: 'primary.main',
-                      },
-                    }}
-                  >
+    <Box sx={{ width: '100%', overflow: 'hidden' }}>
+      <TableContainer 
+        component={Paper} 
+        sx={{ 
+          borderRadius: 2,
+          border: '1px solid',
+          borderColor: 'divider',
+          overflow: 'auto',
+          maxHeight: 'calc(100vh - 200px)',
+        }}
+      >
+        <Table 
+          sx={{ minWidth: 800 }} 
+          stickyHeader
+          size="small"
+        >
+          <TableHead>
+            <TableRow>
+              {headers.map((header) => (
+                <TableCell
+                  key={String(header.id)}
+                  align="center"
+                  sx={{ 
+                    width: header.width,
+                    fontWeight: 600,
+                    backgroundColor: 'grey.50',
+                    fontSize: '0.875rem',
+                    py: 1,
+                    borderBottom: '2px solid',
+                    borderColor: 'primary.main',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {header.sortable && header.id !== 'actions' ? (
+                    <TableSortLabel
+                      active={orderBy === header.id}
+                      direction={orderBy === header.id ? order : 'asc'}
+                      onClick={() => handleRequestSort(header.id as OrderBy)}
+                      sx={{
+                        '&:hover': {
+                          color: 'primary.main',
+                        },
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
+                        {header.label}
+                        {headerIcons[header.id]}
+                      </Box>
+                    </TableSortLabel>
+                  ) : (
                     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
                       {header.label}
                       {headerIcons[header.id]}
                     </Box>
-                  </TableSortLabel>
-                ) : (
-                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5 }}>
-                    {header.label}
-                    {headerIcons[header.id]}
-                  </Box>
-                )}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        
-        <TableBody>
-          {sortedTasks.length === 0 ? (
-            <TableRow>
-              <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
-                <Typography variant="body2" color="text.secondary">
-                  هیچ تسکی یافت نشد
-                </Typography>
-              </TableCell>
+                  )}
+                </TableCell>
+              ))}
             </TableRow>
-          ) : (
-            sortedTasks.map((task) => (
-              <React.Fragment key={task.id}>
-                <TableRow 
-                  sx={{ 
-                    '&:hover': { 
+          </TableHead>
+          
+          <TableBody>
+            {paginatedTasks.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={7} align="center" sx={{ py: 4 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    هیچ تسکی یافت نشد
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              paginatedTasks.map((task) => (
+                <React.Fragment key={task.id}>
+                  <TableRow 
+                    sx={{ 
+                      '&:hover': { 
+                        backgroundColor: task.done ? '#e8f5e8' : '#fff3e0',
+                      },
                       backgroundColor: task.done ? '#e8f5e8' : '#fff3e0',
-                    },
-                    backgroundColor: task.done ? '#e8f5e8' : '#fff3e0',
-                    cursor: 'pointer',
-                    borderLeft: task.done ? '4px solid #22c55e' : '4px solid #f59e0b',
-                  }}
-                  onClick={() => handleToggleExpand(task.id)}
-                >
-                  <TableCell align="center" sx={{ fontWeight: 500 }}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2">
-                        {task.title}
-                      </Typography>
-                      {task.subtasks && task.subtasks.length > 0 && (
-                        <Chip
-                          label={task.subtasks.length}
-                          size="small"
-                          color="info"
-                          variant="outlined"
-                          sx={{ height: 24, fontSize: '0.7rem' }}
-                        />
-                      )}
-                    </Box>
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    <Chip
-                      label={task.letter_number || '—'}
-                      size="small"
-                      variant={task.letter_number ? "filled" : "outlined"}
-                      color={task.letter_number ? "primary" : "default"}
-                    />
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    {task.letter_date ? (
-                      <Chip
-                        label={convertToJalali(task.letter_date)}
-                        size="small"
-                        variant="outlined"
-                        color="info"
-                      />
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        —
-                      </Typography>
-                    )}
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    <Tooltip title={task.description || 'بدون توضیح'}>
-                      <Typography 
-                        variant="body2" 
-                        sx={{ 
-                          display: '-webkit-box',
-                          WebkitLineClamp: 3,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          lineHeight: 1.4,
-                          maxHeight: '4.2em',
-                        }}
-                      >
-                        {task.description || '—'}
-                      </Typography>
-                    </Tooltip>
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    {task.due_date ? (
-                      <Chip
-                        label={convertToJalali(task.due_date)}
-                        size="small"
-                        variant="outlined"
-                        color={new Date(task.due_date) < new Date() ? "error" : "success"}
-                      />
-                    ) : (
-                      <Typography variant="body2" color="text.secondary">
-                        —
-                      </Typography>
-                    )}
-                  </TableCell>
-
-                  <TableCell align="center">
-                    <StatusChip status={task.status} />
-                  </TableCell>
-                  
-                  <TableCell align="center">
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
-                    <Tooltip title={task.done ? 'انجام شده - کلیک برای تغییر به در حال انجام' : 'در حال انجام - کلیک برای تغییر به انجام شده'}>
-                      <Chip
-                        label={task.done ? 'انجام شده' : 'در حال انجام'}
-                        size="small"
-                        color={task.done ? "success" : "warning"}
-                        variant={task.done ? "filled" : "outlined"}
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          console.log('شروع تغییر وضعیت تسک:', task.id, 'به:', !task.done);
-                          try {
-                            await onToggleDone(task.id, !task.done);
-                            console.log('تغییر وضعیت تسک با موفقیت انجام شد');
-                          } catch (error) {
-                            console.error('خطا در تغییر وضعیت تسک:', error);
-                          }
-                        }}
-                        sx={{ 
-                          cursor: 'pointer',
-                          '&:hover': {
-                            opacity: 0.8,
-                          }
-                        }}
-                      />
-                    </Tooltip>
-
-                      <Box sx={{ display: 'flex', gap: 0.5 }}>
-                        <Tooltip title="ویرایش">
-                          <IconButton 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onEdit(task);
-                            }}
-                            color="primary"
-                          >
-                            <EditIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
-                        
-                        <Tooltip title="حذف">
-                          <IconButton 
-                            size="small" 
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDelete(task.id);
-                            }}
-                            color="error"
-                          >
-                            <DeleteIcon fontSize="small" />
-                          </IconButton>
-                        </Tooltip>
+                      cursor: 'pointer',
+                      borderLeft: task.done ? '4px solid #22c55e' : '4px solid #f59e0b',
+                    }}
+                    onClick={() => handleToggleExpand(task.id)}
+                  >
+                    <TableCell align="center" sx={{ fontWeight: 500, whiteSpace: 'nowrap' }}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
+                        <Typography variant="body2">
+                          {task.title}
+                        </Typography>
+                        {task.subtasks && task.subtasks.length > 0 && (
+                          <Chip
+                            label={task.subtasks.length}
+                            size="small"
+                            color="info"
+                            variant="outlined"
+                            sx={{ height: 24, fontSize: '0.7rem' }}
+                          />
+                        )}
                       </Box>
-                    </Box>
-                  </TableCell>
-                </TableRow>
+                    </TableCell>
+                    
+                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                      <Chip
+                        label={task.letter_number || '—'}
+                        size="small"
+                        variant={task.letter_number ? "filled" : "outlined"}
+                        color={task.letter_number ? "primary" : "default"}
+                      />
+                    </TableCell>
+                    
+                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                      {task.letter_date ? (
+                        <Chip
+                          label={convertToJalali(task.letter_date)}
+                          size="small"
+                          variant="outlined"
+                          color="info"
+                        />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          —
+                        </Typography>
+                      )}
+                    </TableCell>
+                    
+                    <TableCell align="center">
+                      <Tooltip title={task.description || 'بدون توضیح'}>
+                        <Typography 
+                          variant="body2" 
+                          sx={{ 
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            lineHeight: 1.4,
+                            maxHeight: '2.8em',
+                            textAlign: 'right',
+                            wordBreak: 'break-word',
+                          }}
+                        >
+                          {task.description || '—'}
+                        </Typography>
+                      </Tooltip>
+                    </TableCell>
+                    
+                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                      {task.due_date ? (
+                        <Chip
+                          label={convertToJalali(task.due_date)}
+                          size="small"
+                          variant="outlined"
+                          color={new Date(task.due_date) < new Date() ? "error" : "success"}
+                        />
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">
+                          —
+                        </Typography>
+                      )}
+                    </TableCell>
 
-                <TableRow>
-                  <TableCell colSpan={7} sx={{ p: 0, border: 0 }}>
-                    <SubTasksPanel
-                      taskId={task.id}
-                      subTasks={task.subtasks || []}
-                      isOpen={isTaskExpanded(task.id)}
-                      onToggle={() => handleToggleExpand(task.id)}
-                      onAddSubTask={onAddSubTask}
-                      onEditSubTask={onEditSubTask}
-                      onDeleteSubTask={onDeleteSubTask}
-                      onToggleSubTaskDone={onToggleSubTaskDone}
-                    />
-                  </TableCell>
-                </TableRow>
-              </React.Fragment>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </TableContainer>
+                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                      <StatusChip status={task.status} />
+                    </TableCell>
+                    
+                    <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>
+                      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1 }}>
+                        <Tooltip title={task.done ? 'انجام شده - کلیک برای تغییر به در حال انجام' : 'در حال انجام - کلیک برای تغییر به انجام شده'}>
+                          <Chip
+                            label={task.done ? 'انجام شده' : 'در حال انجام'}
+                            size="small"
+                            color={task.done ? "success" : "warning"}
+                            variant={task.done ? "filled" : "outlined"}
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              console.log('شروع تغییر وضعیت تسک:', task.id, 'به:', !task.done);
+                              try {
+                                await onToggleDone(task.id, !task.done);
+                                console.log('تغییر وضعیت تسک با موفقیت انجام شد');
+                              } catch (error) {
+                                console.error('خطا در تغییر وضعیت تسک:', error);
+                              }
+                            }}
+                            sx={{ 
+                              cursor: 'pointer',
+                              '&:hover': {
+                                opacity: 0.8,
+                              }
+                            }}
+                          />
+                        </Tooltip>
+
+                        <Box sx={{ display: 'flex', gap: 0.5 }}>
+                          <Tooltip title="ویرایش">
+                            <IconButton 
+                              size="small" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(task);
+                              }}
+                              color="primary"
+                            >
+                              <EditIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          
+                          <Tooltip title="حذف">
+                            <IconButton 
+                              size="small" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDelete(task.id);
+                              }}
+                              color="error"
+                            >
+                              <DeleteIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+
+                  <TableRow>
+                    <TableCell colSpan={7} sx={{ p: 0, border: 0 }}>
+                      <SubTasksPanel
+                        taskId={task.id}
+                        subTasks={task.subtasks || []}
+                        isOpen={isTaskExpanded(task.id)}
+                        onToggle={() => handleToggleExpand(task.id)}
+                        onAddSubTask={onAddSubTask}
+                        onEditSubTask={onEditSubTask}
+                        onDeleteSubTask={onDeleteSubTask}
+                        onToggleSubTaskDone={onToggleSubTaskDone}
+                      />
+                    </TableCell>
+                  </TableRow>
+                </React.Fragment>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+
+      {/* Pagination */}
+      <TablePagination
+        rowsPerPageOptions={[10, 20, 50, 100]}
+        component="div"
+        count={sortedTasks.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onPageChange={handleChangePage}
+        onRowsPerPageChange={handleChangeRowsPerPage}
+        labelRowsPerPage="تعداد رکورد در صفحه:"
+        labelDisplayedRows={({ from, to, count }) => 
+          `${from}-${to} از ${count !== -1 ? count : `بیشتر از ${to}`}`
+        }
+        sx={{
+          border: '1px solid',
+          borderColor: 'divider',
+          borderTop: 0,
+          borderBottomLeftRadius: 8,
+          borderBottomRightRadius: 8,
+          backgroundColor: 'background.paper',
+        }}
+      />
+    </Box>
   );
 }

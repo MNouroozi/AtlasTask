@@ -64,9 +64,30 @@ export function useTasks() {
 
             const updatedTask = await response.json();
 
-            setAllTasks(prevTasks => 
-                prevTasks.map(task => task.id === id ? updatedTask : task)
-            );
+            setAllTasks(prevTasks => {
+                // اگر وضعیت done تغییر کرده باشد
+                const currentTask = prevTasks.find(task => task.id === id);
+                const doneStatusChanged = currentTask && currentTask.done !== updatedTask.done;
+
+                if (doneStatusChanged) {
+                    // اگر تسک انجام شده است، به انتهای لیست منتقل شود
+                    if (updatedTask.done) {
+                        const filteredTasks = prevTasks.filter(task => task.id !== id);
+                        return [...filteredTasks, updatedTask];
+                    } 
+                    // اگر تسک از حالت انجام شده به انجام نشده تغییر کرد، به ابتدای لیست منتقل شود
+                    else {
+                        const filteredTasks = prevTasks.filter(task => task.id !== id);
+                        return [updatedTask, ...filteredTasks];
+                    }
+                } 
+                // اگر فقط ویرایش عادی است، در جای خودش به روز شود
+                else {
+                    return prevTasks.map(task => 
+                        task.id === id ? updatedTask : task
+                    );
+                }
+            });
 
             return updatedTask;
         } catch (error) {
@@ -92,11 +113,18 @@ export function useTasks() {
 
             const updatedTask = await response.json();
 
-            setAllTasks(prevTasks => 
-                prevTasks.map(task => 
-                    task.id === id ? { ...task, done: done } : task
-                )
-            );
+            setAllTasks(prevTasks => {
+                const filteredTasks = prevTasks.filter(task => task.id !== id);
+                
+                // اگر تسک انجام شده است، به انتهای لیست منتقل شود
+                if (done) {
+                    return [...filteredTasks, updatedTask];
+                } 
+                // اگر تسک از حالت انجام شده به انجام نشده تغییر کرد، به ابتدای لیست منتقل شود
+                else {
+                    return [updatedTask, ...filteredTasks];
+                }
+            });
 
             console.log('🟢 Task state updated - taskId:', id, 'new done:', done);
 
