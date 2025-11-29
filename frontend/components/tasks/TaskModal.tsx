@@ -190,7 +190,6 @@ export default function TaskModal({
 
             await onSave(taskData);
             
-            toast.success(task ? 'تسک با موفقیت ویرایش شد' : 'تسک جدید ایجاد شد');
             onClose();
         } catch (error) {
             console.error('❌ Error saving task:', error);

@@ -97,6 +97,10 @@ func UpdateMainTask(c *fiber.Ctx) error {
 		task.Done = done.(bool)
 	}
 
+	if status, exists := input["status"]; exists {
+		task.Status = models.TaskStatus(status.(string))
+	}
+
 	if err := config.DB.Save(&task).Error; err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
 	}
