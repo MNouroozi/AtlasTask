@@ -1,47 +1,75 @@
-// توضیح فارسی: فایل اتصال به دیتابیس PostgreSQL و اجرای AutoMigrate برای جداول AtlasTask
 package config
 
 import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
-	"task/models" // ایمپورت مدل‌های پروژه
+	"task/models"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+
+	"github.com/joho/godotenv"
 )
 
-// متغیر جهانی برای دسترسی از سایر بخش‌ها
 var DB *gorm.DB
 
-// اتصال و مهاجرت دیتابیس
 func ConnectDB() {
-	fmt.Println("🛠️ [DB] Connecting to PostgreSQL...")
+	fmt.Println("Connecting to PostgreSQL...")
 
-	// ✳ خواندن رشته اتصال از متغیر محیطی یا فالو‌بک پیش‌فرض
-	dsn := os.Getenv("DB_DSN")
-	if dsn == "" {
-		dsn = "host=localhost user=admin password=Admin123@ dbname=task port=5432 sslmode=disable TimeZone=Asia/Tehran"
+	godotenv.Load(".env")
+
+	// استفاده از نام کانتینر دیتابیس
+	host := getEnv("DB_HOST", "localhost") // تغییر به atlastask-db
+	port := getEnv("DB_PORT", "5432")
+	user := getEnv("DB_USER", "admin")
+	password := getEnv("DB_PASSWORD", "Admin123@")
+	dbname := getEnv("DB_NAME", "task")
+	sslmode := getEnv("DB_SSL_MODE", "disable")
+	//dsn := "host=localhost user=admin password=Admin123@ dbname=task port=5432 sslmode=disable TimeZone=Asia/Tehran"
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=Asia/Tehran",
+		host, user, password, dbname, port, sslmode)
+
+	fmt.Printf("Connecting to: %s@%s:%s/%s\n", user, host, port, dbname)
+
+	// اضافه کردن retry logic
+	var database *gorm.DB
+	var err error
+	maxRetries := 1
+
+	for i := 0; i < maxRetries; i++ {
+		database, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
+		if err != nil {
+			log.Printf("Attempt %d/%d: Failed to connect to database: %v", i+1, maxRetries, err)
+			if i < maxRetries-1 {
+				log.Printf("Retrying in 3 seconds...")
+				time.Sleep(3 * time.Second)
+			}
+			continue
+		}
+		break
 	}
 
-	// اتصال با GORM
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("❌ [DB ERROR] Failed to connect: %v", err)
+		log.Fatalf("Failed to connect to database after %d attempts: %v", maxRetries, err)
 	}
 
 	DB = database
-	fmt.Println("✅ [DB] Connection established successfully.")
+	fmt.Println("Database connection established")
 
-	// ✨ اجرای AutoMigrate بدون حذف داده‌ها
-	err = DB.AutoMigrate(
-		&models.MainTask{},
-		&models.Subtask{},
-	)
+	err = DB.AutoMigrate(&models.MainTask{}, &models.Subtask{})
 	if err != nil {
-		log.Fatalf("❌ [DB ERROR] AutoMigrate failed: %v", err)
+		log.Fatalf("Migration failed: %v", err)
 	}
 
-	fmt.Println("✅ [DB] AutoMigrate completed (MainTask, Subtask).")
+	fmt.Println("Migrations completed")
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }

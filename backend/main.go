@@ -12,13 +12,11 @@ import (
 )
 
 func main() {
-	fmt.Println("⚙️ [INIT] Starting AtlasTask backend...")
+	fmt.Println("Starting AtlasTask backend...")
 
-	//  اتصال به دیتابیس
 	config.ConnectDB()
 
 	app := fiber.New()
-	fmt.Println("🚀 [SERVER] Fiber initialized successfully!")
 
 	app.Use(cors.New(cors.Config{
 		AllowOrigins:     "http://localhost:3000",
@@ -28,15 +26,14 @@ func main() {
 	}))
 
 	routes.RegisterRoutes(app)
-	fmt.Println("✅ [ROUTES] Routes registered successfully!")
 
 	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("AtlasTask backend is healthy ✅")
+		return c.SendString("AtlasTask backend is healthy")
 	})
 
 	if err := app.Listen(":8080"); err != nil {
-		log.Fatalf("❌ [SERVER ERROR] Unable to start: %v", err)
+		log.Fatalf("Unable to start server: %v", err)
 	}
 
-	fmt.Println("✅ [START] AtlasTask backend running on :8080")
+	fmt.Println("AtlasTask backend running on :8080")
 }

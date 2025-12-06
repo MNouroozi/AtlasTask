@@ -23,4 +23,5 @@ func RegisterRoutes(app *fiber.App) {
 	api.Post("/main-tasks/:mainTaskId/subtasks", handlers.CreateSubtask)
 	api.Put("/subtasks/:id", handlers.UpdateSubtask)
 	api.Delete("/subtasks/:id", handlers.DeleteSubtask)
+	app.Post("/api/backup", handlers.BackupDatabase)
 }
